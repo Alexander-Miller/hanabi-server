@@ -38,8 +38,8 @@ impl CardInHand {
 }
 
 pub struct Player {
-    name:  String,
-    cards: Vec<CardInHand>,
+    pub name:  String,
+    pub cards: Vec<CardInHand>,
 }
 
 impl Player {
@@ -51,11 +51,20 @@ impl Player {
     }
 
     pub fn discard_card(&mut self, discarded_card: &Card, new_card: Option<Card>) -> Result<(), &'static str> {
+        println!("self.cards:");
+        for card_in_hand in &self.cards {
+            println!("{}", card_in_hand.card);
+        }
         match self.cards.iter().position(|hc| hc.card == *discarded_card) {
-            None     => Err(TODO),
+            None     => {
+                println!("Discard Error, card not found");
+                Err(TODO)
+            }
             Some(i)  => {
+                println!("Card discarded");
                 match new_card {
                     Some(card) => {
+                        println!("new card = {}", card);
                         let mut new_card_in_hand = CardInHand::new(card);
                         mem::swap(&mut new_card_in_hand, &mut self.cards[i]);
                     }
@@ -91,11 +100,20 @@ impl GameState {
         }
     }
 
+    pub fn player_by_id(&self, id: u8) -> Option<&Player> {
+        self.players.get(&id)
+    }
+
     pub fn add_player(&mut self, id: u8, name: &str) -> Result<(),()> {
-        match self.players.contains_key(&id) {
+        match self.players.values_mut().any(|player| player.name == name) {
             true  => Err(()),
             false => {
-                self.players.insert(id, Player::new(name.into()));
+                let mut new_player = Player::new(name.into());
+                println!("Deck size = {}", self.deck.cards.len());
+                for _ in 0..5 {
+                    new_player.cards.push(CardInHand::new(self.deck.pop().unwrap()));
+                }
+                self.players.insert(id, new_player);
                 Ok(())
             }
         }

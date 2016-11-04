@@ -1,6 +1,6 @@
 use cards::{Color, Number, Card};
 
-#[derive(RustcDecodable, Debug)]
+#[derive(Debug, PartialEq)]
 pub enum RequestType {
     ConnectionRequestType,
     DiscardCardRequestType,
@@ -20,7 +20,7 @@ pub struct ConnectionRequest {
     pub name: String
 }
 
-#[derive(RustcDecodable)]
+#[derive(RustcDecodable, RustcEncodable)]
 pub struct DiscardCardRequest {
     pub discarded_card: Card
 }
