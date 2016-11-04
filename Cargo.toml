@@ -1,0 +1,10 @@
+[package]
+name = "hanabi"
+version = "0.1.0"
+authors = ["Alexander Miller <alexanderm@web.de>"]
+
+[dependencies]
+rand = "0.3.14"
+ws = "0.5.3"
+rustc-serialize = "0.3.19"
+log = "0.3.6"
