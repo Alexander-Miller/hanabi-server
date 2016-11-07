@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 use std::collections::HashMap;
 use std::mem;
+use std::default::Default;
 use cards::{Color, Number, Card, Deck};
 use requests::{HintNumberRequest, HintColorRequest, PlayCardRequest};
 use responses::error_messages::TODO;
@@ -77,6 +78,12 @@ pub struct GameState {
     deck:            Deck,
     played_cards:    HashMap<Color, Number>,
     players:         HashMap<u8, Player>
+}
+
+impl Default for GameState {
+    fn default() -> Self {
+        GameState::new(7, 3)
+    }
 }
 
 impl GameState {

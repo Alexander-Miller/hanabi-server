@@ -17,14 +17,13 @@ mod display;
 use std::rc::Rc;
 use std::cell::{Cell, RefCell};
 use connection::Connection;
-use game_state::GameState;
 use server::Server;
 
 fn main() {
 
     env_logger::init().unwrap();
 
-    let server = Rc::new(RefCell::new(Server::new(GameState::new(7,3))));
+    let server = Rc::new(RefCell::new(Server::new(Default::default())));
     let token_cell = Cell::new(0);
 
     // TODO: factory?
