@@ -98,14 +98,12 @@ impl GameState {
         }
     }
 
-    pub fn add_player(&mut self, id: u8, name: &str) -> Result<(),()> {
-        match self.players.contains_key(&id) {
-            true  => Err(()),
-            false => {
-                self.players.insert(id, Player::new(name.into()));
-                Ok(())
-            }
-        }
+    pub fn already_connected(&mut self, id: u8) -> bool {
+        self.player_by_id(id).is_some()
+    }
+
+    pub fn add_player(&mut self, id: u8, name: &str) {
+        self.players.insert(id, Player::new(name.into()));
     }
 
     pub fn discard_card(&mut self, discarding_player_id: u8, discarded_card: &Card) -> Result<(), &'static str> {
@@ -170,6 +168,10 @@ impl GameState {
 
     pub fn play_card(&mut self, playing_player_id: u8, req: &PlayCardRequest) -> Result<(), &'static str> {
         Ok(())
+    }
+
+    fn player_by_id(&mut self, id: u8) -> Option<&mut Player> {
+        self.players.get_mut(&id)
     }
 
 }

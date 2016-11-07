@@ -1,6 +1,6 @@
 use cards::{Color, Number, Card};
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum RequestType {
     ConnectionRequestType,
     DiscardCardRequestType,

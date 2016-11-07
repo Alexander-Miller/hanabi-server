@@ -27,6 +27,7 @@ impl Server {
     }
 
     pub fn answer_with_error_msg(&self, explanation: &'static str, details: Option<&str>, con: &Connection) -> Result<()> {
+        info!("Sending Error Response: '{}'.", explanation);
         let resp_mess = ResponseMessage::new(ResponseType::ErrorResponseType, &ErrorResponse::new(explanation, details));
         let resp_json = json::encode(&resp_mess).expect(CATASTROPHIC_FUCKUP);
         con.out.send(resp_json)
@@ -40,12 +41,18 @@ impl Server {
 
     pub fn handle_req(&mut self, req: &RequestMessage, con: &Connection) -> Result<()> {
         info!("Received Request: {:?} from Connnection {}.", req.req_type, con.id);
-        match req.req_type {
-            ConnectionRequestType  => self.dispatch::<ConnectionRequest>(&req, &con, &mut Self::handle_connection_request),
-            DiscardCardRequestType => self.dispatch::<DiscardCardRequest>(&req, &con, &mut Self::handle_discard_request),
-            HintColorRequestType   => self.dispatch::<HintColorRequest>(&req, &con, &mut Self::handle_hint_color_request),
-            HintNumberRequestType  => self.dispatch::<HintNumberRequest>(&req, &con, &mut Self::handle_hint_number_request),
-            PlayCardRequestType    => self.dispatch::<PlayCardRequest>(&req, &con, &mut Self::handle_play_card_request),
+        match (self.game_state.already_connected(con.id), req.req_type == ConnectionRequestType) {
+            (true, true)   => self.answer_with_error_msg(ALREADY_CONNECTED, None, &con),
+            (false, false) => self.answer_with_error_msg(NOT_YET_CONNECTED, None, &con),
+            (_ , _)        => {
+                match req.req_type {
+                    ConnectionRequestType  => self.dispatch::<ConnectionRequest>(&req, &con, &mut Self::handle_connection_request),
+                    DiscardCardRequestType => self.dispatch::<DiscardCardRequest>(&req, &con, &mut Self::handle_discard_request),
+                    HintColorRequestType   => self.dispatch::<HintColorRequest>(&req, &con, &mut Self::handle_hint_color_request),
+                    HintNumberRequestType  => self.dispatch::<HintNumberRequest>(&req, &con, &mut Self::handle_hint_number_request),
+                    PlayCardRequestType    => self.dispatch::<PlayCardRequest>(&req, &con, &mut Self::handle_play_card_request),
+                }
+            }
         }
     }
 
@@ -62,18 +69,11 @@ impl Server {
 
     fn handle_connection_request(&mut self, conn_req: &ConnectionRequest, con: &Connection) -> Result<()> {
         info!("Handle Request for player \"{}\" from Connection {}.", conn_req.name, con.id);
-        match self.game_state.add_player(con.id, conn_req.name.as_str()) {
-            Ok(_)  => {
-                info!("Connection success.");
-                let conn_resp = ConnectionResponse::new(conn_req.name.as_str());
-                let resp_mess = ResponseMessage::new(ResponseType::ConnectionResponseType, &conn_resp);
-                self.answer_with_resp_msg(&resp_mess, &con)
-            }
-            Err(_) => {
-                error!("Connection failure, player already exists.");
-                self.answer_with_error_msg(PLAYER_ALREADY_EXISTS, None, &con)
-            }
-        }
+        self.game_state.add_player(con.id, conn_req.name.as_str());
+        info!("Connection success.");
+        let conn_resp = ConnectionResponse::new(conn_req.name.as_str());
+        let resp_mess = ResponseMessage::new(ResponseType::ConnectionResponseType, &conn_resp);
+        self.answer_with_resp_msg(&resp_mess, &con)
     }
 
     fn handle_discard_request(&mut self, discard_req: &DiscardCardRequest, con: &Connection) -> Result<()> {
