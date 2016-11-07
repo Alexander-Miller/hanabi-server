@@ -1,6 +1,6 @@
 use cards::{Color, Number, Card};
 
-#[derive(RustcDecodable, Debug)]
+#[derive(Debug)]
 pub enum RequestType {
     ConnectionRequestType,
     DiscardCardRequestType,

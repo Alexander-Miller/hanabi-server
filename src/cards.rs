@@ -2,12 +2,12 @@ use rand;
 use rand::{Rng};
 use std::iter;
 
-#[derive(Clone, RustcDecodable, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash)]
 pub enum Color {
     Red, Yellow, Green, Blue, White
 }
 
-#[derive(Clone, RustcDecodable, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash)]
 pub enum Number {
     One, Two, Three, Four, Five
 }
