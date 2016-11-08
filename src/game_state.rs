@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::mem;
 use std::default::Default;
 use cards::{Color, Number, Card, Deck};
-use requests::{HintNumberRequest, HintColorRequest, PlayCardRequest};
+use requests::{HintNumberRequest, HintColorRequest, PlayCardRequest, DiscardCardRequest};
 use responses::error_messages::*;
 
 pub struct CardKnowledge {
@@ -50,25 +50,6 @@ impl Player {
             cards: cards,
         }
     }
-
-    pub fn discard_card(&mut self, discarded_card: &Card, new_card: Option<Card>) -> Result<(), &'static str> {
-        match self.cards.iter().position(|hc| hc.card == *discarded_card) {
-            None     => Err(TODO),
-            Some(i)  => {
-                match new_card {
-                    Some(card) => {
-                        let mut new_card_in_hand = CardInHand::new(card);
-                        mem::swap(&mut new_card_in_hand, &mut self.cards[i]);
-                    }
-                    None => {
-                        self.cards.remove(i);
-                    }
-                }
-                Ok(())
-            }
-        }
-    }
-
 }
 
 pub struct GameState {
@@ -118,8 +99,28 @@ impl GameState {
         Ok(())
     }
 
-    pub fn discard_card(&mut self, discarding_player_id: u8, discarded_card: &Card) -> Result<(), &'static str> {
-        self.players.get_mut(&discarding_player_id).unwrap().discard_card(&discarded_card, self.deck.pop())
+    pub fn discard_card(&mut self, discarding_player_id: u8, discard_req: &DiscardCardRequest) -> CardDrawingResult {
+        let mut player = self.players.get_mut(&discarding_player_id).unwrap();
+        match player.cards.iter().position(|hc| hc.card == discard_req.discarded_card) {
+            None => {
+                error!("Card {} could not be found.", discard_req.discarded_card);
+                CardDrawingResult::Err(CARD_NOT_FOUND)
+            }
+            Some(i) => {
+                self.hint_tokens += 1;
+                match self.deck.pop() {
+                    Some(card) => {
+                        let mut new_card_in_hand = CardInHand::new(card);
+                        mem::swap(&mut new_card_in_hand, &mut player.cards[i]);
+                        CardDrawingResult::Ok(false)
+                    }
+                    None => {
+                        player.cards.remove(i);
+                        CardDrawingResult::Ok(true)
+                    }
+                }
+            }
+        }
     }
 
     pub fn hint_color(&mut self, req: &HintColorRequest) -> Result<(), &'static str> {
@@ -186,4 +187,9 @@ impl GameState {
         self.players.get_mut(&id)
     }
 
+}
+
+pub enum CardDrawingResult {
+    Ok(bool),
+    Err(&'static str),
 }

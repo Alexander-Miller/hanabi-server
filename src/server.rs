@@ -1,7 +1,7 @@
 use rustc_serialize::{json, Decodable};
 use ws::Result;
 use std::error::Error;
-use game_state::GameState;
+use game_state::{CardDrawingResult, GameState};
 use connection::Connection;
 use requests::{
     RequestMessage,
@@ -17,12 +17,14 @@ use responses::error_messages::*;
 
 pub struct Server {
     game_state: GameState,
+    finish_count: u8,
 }
 
 impl Server {
     pub fn new(game_state: GameState) -> Self {
         Server {
-            game_state: game_state,
+            game_state:   game_state,
+            finish_count: 0,
         }
     }
 
@@ -85,9 +87,20 @@ impl Server {
     }
 
     fn handle_discard_request(&mut self, discard_req: &DiscardCardRequest, con: &Connection) -> Result<()> {
-        match self.game_state.discard_card(con.id, &discard_req.discarded_card) {
-            Ok(_)        => Ok(()),
-            Err(err_msg) => self.answer_with_error_msg(err_msg, None, &con),
+        info!("Handle Discard Request for card \"{}\" from Connection {}.", discard_req.discarded_card, con.id);
+        match self.game_state.discard_card(con.id, &discard_req) {
+            CardDrawingResult::Ok(deck_is_empty) => {
+                info!("Card successfully discarded.");
+                if deck_is_empty {
+                    self.finish_count -= 1;
+                    info!("Deck is empty. Game finishes within {} turns.", self.finish_count);
+                }
+                Ok(())
+            }
+            CardDrawingResult::Err(err_msg) => {
+                info!("Card could not be discarded: {}.", err_msg);
+                self.answer_with_error_msg(err_msg, None, &con)
+            }
         }
     }
 
