@@ -4,7 +4,7 @@ use std::mem;
 use std::default::Default;
 use cards::{Color, Number, Card, Deck};
 use requests::{HintNumberRequest, HintColorRequest, PlayCardRequest};
-use responses::error_messages::TODO;
+use responses::error_messages::*;
 
 pub struct CardKnowledge {
     knows_color:      bool,
@@ -44,10 +44,10 @@ pub struct Player {
 }
 
 impl Player {
-    pub fn new(name: String) -> Self {
+    pub fn new(name: String, cards: Vec<CardInHand>) -> Self {
         Player {
             name:  name,
-            cards: Vec::with_capacity(5),
+            cards: cards,
         }
     }
 
@@ -102,8 +102,20 @@ impl GameState {
         self.player_by_id(id).is_some()
     }
 
-    pub fn add_player(&mut self, id: u8, name: &str) {
-        self.players.insert(id, Player::new(name.into()));
+    pub fn add_player(&mut self, id: u8, name: &str) -> Result<(), &'static str> {
+        if self.deck.cards.len() < 5 {
+            return Err(NO_CARDS);
+        }
+
+        if self.players.values().any(|p| p.name == name) {
+            return Err(PLAYER_ALREADY_EXISTS);
+        }
+
+        let cards = (0..5)
+            .map(|_| CardInHand::new(self.deck.cards.pop().unwrap()))
+            .collect();
+        self.players.insert(id, Player::new(name.into(), cards));
+        Ok(())
     }
 
     pub fn discard_card(&mut self, discarding_player_id: u8, discarded_card: &Card) -> Result<(), &'static str> {

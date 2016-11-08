@@ -66,5 +66,6 @@ pub mod error_messages {
     pub const PLAYER_ALREADY_EXISTS:         &'static str = "A Player with the chosen name already exists.";
     pub const ALREADY_CONNECTED:             &'static str = "The Player is already connected.";
     pub const NOT_YET_CONNECTED:             &'static str = "The Player is not yet connected.";
+    pub const NO_CARDS:                      &'static str = "The deck has nor more cards.";
     pub const TODO:                          &'static str = "TODO";
 }

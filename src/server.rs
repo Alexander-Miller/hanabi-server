@@ -61,19 +61,27 @@ impl Server {
     {
         debug!("Dispatching Request message type {:?}.", req_msg.req_type);
         match json::decode::<T>(&req_msg.payload) {
-            Ok(req) => dispatcher(self, &req, con),
+            Ok(req) => dispatcher(self, &req, &con),
             Err(e)  => self.answer_with_error_msg(UNABLE_TO_DESERIALIZE_PAYLOAD, Some(e.description()), &con)
 
         }
     }
 
     fn handle_connection_request(&mut self, conn_req: &ConnectionRequest, con: &Connection) -> Result<()> {
-        info!("Handle Request for player \"{}\" from Connection {}.", conn_req.name, con.id);
-        self.game_state.add_player(con.id, conn_req.name.as_str());
-        info!("Connection success.");
-        let conn_resp = ConnectionResponse::new(conn_req.name.as_str());
-        let resp_mess = ResponseMessage::new(ResponseType::ConnectionResponseType, &conn_resp);
-        self.answer_with_resp_msg(&resp_mess, &con)
+        info!("Handle Connection Request for player \"{}\" from Connection {}.", conn_req.name, con.id);
+        match self.game_state.add_player(con.id, conn_req.name.as_str()) {
+            Ok(_) => {
+                info!("Connection success.");
+                self.finish_count += 1;
+                let conn_resp = ConnectionResponse::new(conn_req.name.as_str());
+                let resp_mess = ResponseMessage::new(ResponseType::ConnectionResponseType, &conn_resp);
+                self.answer_with_resp_msg(&resp_mess, &con)
+            }
+            Err(err_msg) => {
+                info!("Connection failure.");
+                self.answer_with_error_msg(err_msg, None, &con)
+            }
+        }
     }
 
     fn handle_discard_request(&mut self, discard_req: &DiscardCardRequest, con: &Connection) -> Result<()> {
