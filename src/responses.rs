@@ -32,6 +32,18 @@ pub struct ErrorResponse {
     err_details: Option<String>,
 }
 
+impl ErrorResponse {
+    pub fn new(explanation: &'static str, err_details: Option<&str>) -> Self {
+        ErrorResponse {
+            explanation: explanation,
+            err_details: match err_details {
+                Some(details) => Some(details.to_owned()),
+                None          => None,
+            }
+        }
+    }
+}
+
 #[derive(RustcEncodable)]
 pub struct ConnectionResponse {
     name: String
@@ -46,17 +58,8 @@ impl ConnectionResponse {
     }
 }
 
-impl ErrorResponse {
-    pub fn new(explanation: &'static str, err_details: Option<&str>) -> Self {
-        ErrorResponse {
-            explanation: explanation,
-            err_details: match err_details {
-                Some(details) => Some(details.to_owned()),
-                None          => None,
-            }
-        }
-    }
-}
+#[derive(RustcEncodable)]
+pub struct DiscardCardResponse;
 
 pub mod error_messages {
     pub const MSG_TO_TXT_ERROR:              &'static str = "The received message could not be read as a String.";

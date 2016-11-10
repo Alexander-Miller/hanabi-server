@@ -3,6 +3,7 @@ use ws::Result;
 use std::error::Error;
 use game_state::{CardDrawingResult, GameState};
 use connection::Connection;
+use requests::RequestType::*;
 use requests::{
     RequestMessage,
     ConnectionRequest,
@@ -11,9 +12,14 @@ use requests::{
     HintNumberRequest,
     PlayCardRequest
 };
-use requests::RequestType::*;
-use responses::{ResponseMessage, ResponseType, ErrorResponse, ConnectionResponse};
 use responses::error_messages::*;
+use responses::{
+    ResponseMessage,
+    ResponseType,
+    ErrorResponse,
+    ConnectionResponse,
+    DiscardCardResponse
+};
 
 pub struct Server {
     game_state: GameState,
@@ -95,7 +101,9 @@ impl Server {
                     self.finish_count -= 1;
                     info!("Deck is empty. Game finishes within {} turns.", self.finish_count);
                 }
-                Ok(())
+                let discard_resp = DiscardCardResponse;
+                let resp_mess = ResponseMessage::new(ResponseType::DiscardCardResponseType, &discard_resp);
+                self.answer_with_resp_msg(&resp_mess, &con)
             }
             CardDrawingResult::Err(err_msg) => {
                 info!("Card could not be discarded: {}.", err_msg);
