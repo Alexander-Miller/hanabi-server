@@ -6,6 +6,8 @@ use cards::{Color, Number, Card, Deck};
 use requests::{HintNumberRequest, HintColorRequest, PlayCardRequest, DiscardCardRequest};
 use responses::error_messages::*;
 
+pub type Void = ();
+
 pub struct CardKnowledge {
     knows_color:      bool,
     knows_number:     bool,
@@ -83,7 +85,7 @@ impl GameState {
         self.player_by_id(id).is_some()
     }
 
-    pub fn add_player(&mut self, id: u8, name: &str) -> Result<(), &'static str> {
+    pub fn add_player(&mut self, id: u8, name: &str) -> Result<Void, &'static str> {
         if self.deck.cards.len() < 5 {
             return Err(NO_CARDS);
         }
@@ -172,15 +174,37 @@ impl GameState {
                     }
                 }
             }
-
             Ok(())
         } else {
             return Err(TODO);
         }
     }
 
-    pub fn play_card(&mut self, playing_player_id: u8, req: &PlayCardRequest) -> Result<(), &'static str> {
-        Ok(())
+    pub fn play_card(&mut self, playing_player_id: u8, req: &PlayCardRequest) -> CardPlayingResult {
+        let mut player = self.players.get_mut(&playing_player_id).unwrap();
+        if let Some(i) = player.cards.iter().position(|cih| cih.card == req.played_card) {
+            match self.deck.pop() {
+                Some(card) => {
+                    let mut new_card_in_hand = CardInHand::new(card);
+                    mem::swap(&mut new_card_in_hand, &mut player.cards[i]);
+                }
+                None => {
+                    player.cards.remove(i);
+                }
+            }
+            match Number::is_next_largest(self.played_cards.get(&req.played_card.color), &req.played_card.number) {
+                true =>  {
+                    self.played_cards.insert(req.played_card.color.clone(), req.played_card.number.clone());
+                    return CardPlayingResult::Success;
+                }
+                false => {
+                    self.err_tokens -= 1;
+                    return CardPlayingResult::Failure;
+                }
+            }
+        } else {
+            return CardPlayingResult::Err(CARD_NOT_FOUND);
+        }
     }
 
     fn player_by_id(&mut self, id: u8) -> Option<&mut Player> {
@@ -191,5 +215,11 @@ impl GameState {
 
 pub enum CardDrawingResult {
     Ok(bool),
+    Err(&'static str),
+}
+
+pub enum CardPlayingResult {
+    Success,
+    Failure,
     Err(&'static str),
 }

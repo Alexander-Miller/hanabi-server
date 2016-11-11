@@ -1,7 +1,7 @@
 use rustc_serialize::{json, Decodable};
 use ws::Result;
 use std::error::Error;
-use game_state::{CardDrawingResult, GameState};
+use game_state::{CardDrawingResult, CardPlayingResult, GameState};
 use connection::Connection;
 use requests::RequestType::*;
 use requests::{
@@ -18,7 +18,8 @@ use responses::{
     ResponseType,
     ErrorResponse,
     ConnectionResponse,
-    DiscardCardResponse
+    DiscardCardResponse,
+    PlayCardResponse
 };
 
 pub struct Server {
@@ -127,6 +128,23 @@ impl Server {
     }
 
     fn handle_play_card_request(&mut self, play_card_req: &PlayCardRequest, con: &Connection) -> Result<()> {
-        Ok(())
+        info!("Handle Play Card Request for card \"{}\" from Connection {}.", play_card_req.played_card, con.id);
+        match self.game_state.play_card(con.id, &play_card_req) {
+            CardPlayingResult::Success => {
+                info!("Attempt to play Card {} was successful.", play_card_req.played_card);
+                let play_resp = PlayCardResponse;
+                let resp_mess = ResponseMessage::new(ResponseType::PlayCardResponseType, &play_resp);
+                self.answer_with_resp_msg(&resp_mess, &con)
+            }
+            CardPlayingResult::Failure => {
+                info!("Attempt to play Card {} was successful.", play_card_req.played_card);
+                let play_resp = PlayCardResponse;
+                let resp_mess = ResponseMessage::new(ResponseType::PlayCardResponseType, &play_resp);
+                self.answer_with_resp_msg(&resp_mess, &con)
+            }
+            CardPlayingResult::Err(err_msg) => {
+                self.answer_with_error_msg(err_msg, None, &con)
+            }
+        }
     }
 }

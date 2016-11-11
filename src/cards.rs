@@ -12,6 +12,19 @@ pub enum Number {
     One, Two, Three, Four, Five
 }
 
+impl Number {
+    pub fn is_next_largest(this: Option<&Number>, that: &Number) -> bool {
+        match (this, that) {
+            (None,                 &Number::One)   => true,
+            (Some(&Number::One),   &Number::Two)   => true,
+            (Some(&Number::Two),   &Number::Three) => true,
+            (Some(&Number::Three), &Number::Four)  => true,
+            (Some(&Number::Four),  &Number::Five)  => true,
+            _                                      => false,
+        }
+    }
+}
+
 #[derive(RustcDecodable, PartialEq, Clone)]
 pub struct Card {
     pub color:  Color,

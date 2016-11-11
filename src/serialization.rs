@@ -10,8 +10,9 @@ impl Encodable for ResponseType {
             ErrorResponseType       => ("ERROR_RESPONSE",        0),
             ConnectionResponseType  => ("CONNECTION_RESPONSE",   1),
             DiscardCardResponseType => ("DISCARD_CARD_RESPONSE", 2),
-            HintColorResposeType    => ("HINT_COLOR_RESPONSE",   3),
-            HintNumberResposeType   => ("HINT_NUMBER_RESPONSE",  4),
+            PlayCardResponseType    => ("PLAY_CARD_RESPONSE",    3),
+            HintColorResposeType    => ("HINT_COLOR_RESPONSE",   4),
+            HintNumberResposeType   => ("HINT_NUMBER_RESPONSE",  5),
         };
         enc.emit_enum("ResponseType", |enc| {
             enc.emit_enum_variant(name, index, 0, |_| {

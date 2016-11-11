@@ -5,6 +5,7 @@ pub enum ResponseType {
     ErrorResponseType,
     ConnectionResponseType,
     DiscardCardResponseType,
+    PlayCardResponseType,
     HintColorResposeType,
     HintNumberResposeType,
 }
@@ -60,6 +61,9 @@ impl ConnectionResponse {
 
 #[derive(RustcEncodable)]
 pub struct DiscardCardResponse;
+
+#[derive(RustcEncodable)]
+pub struct PlayCardResponse;
 
 pub mod error_messages {
     pub const MSG_TO_TXT_ERROR:              &'static str = "The received message could not be read as a String.";
