@@ -8,6 +8,7 @@ use responses::error_messages::*;
 
 pub type Void = ();
 
+#[derive(RustcEncodable)]
 pub struct CardKnowledge {
     knows_color:      bool,
     knows_number:     bool,
@@ -26,6 +27,7 @@ impl CardKnowledge {
     }
 }
 
+#[derive(RustcEncodable)]
 pub struct CardInHand {
     card:      Card,
     knowledge: CardKnowledge,
@@ -40,6 +42,7 @@ impl CardInHand {
     }
 }
 
+#[derive(RustcEncodable)]
 pub struct Player {
     name:  String,
     cards: Vec<CardInHand>,
@@ -54,6 +57,7 @@ impl Player {
     }
 }
 
+#[derive(RustcEncodable)]
 pub struct GameState {
     hint_tokens:     u8,
     hint_tokens_max: u8,

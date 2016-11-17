@@ -25,7 +25,7 @@ impl Number {
     }
 }
 
-#[derive(RustcDecodable, PartialEq, Clone)]
+#[derive(RustcDecodable, RustcEncodable, PartialEq, Clone)]
 pub struct Card {
     pub color:  Color,
     pub number: Number,
@@ -40,6 +40,7 @@ impl Card {
     }
 }
 
+#[derive(RustcEncodable)]
 pub struct Deck {
     pub cards: Vec<Card>
 }
