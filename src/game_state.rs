@@ -122,59 +122,42 @@ impl GameState {
         }
     }
 
-    pub fn hint_color(&mut self, req: &HintColorRequest) -> Result<(), &'static str> {
-        if let Some(player) = self.players.values_mut().find(|p| p.name == req.target_player) {
-            if self.hint_tokens < 1 {
-                return Err(TODO);
-            } else {
-                self.hint_tokens -= 1;
-            }
-
-            match req.positive {
-                true => {
-                    for card_in_hand in player.cards.iter_mut().filter(|cih| cih.card.color == req.color) {
-                        card_in_hand.knowledge.knows_color = true;
-                    }
-                    // TODO: implicit know_not?
-                }
-                false => {
-                    for card_in_hand in player.cards.iter_mut().filter(|cih| cih.card.color != req.color) {
-                        card_in_hand.knowledge.knows_color_not.insert(req.color.clone());
-                    }
-                }
-            }
-            Ok(())
-        } else {
-            return Err(TODO);
-        }
+    pub fn hint_color(&mut self, name: &str, req: &HintColorRequest) -> Result<Void, &'static str> {
+        self.knowledge_update(&name,
+                              req.positive,
+                              &|c| { c.card.color == req.color },
+                              &|c| { c.knowledge.knows_color = true },
+                              &|c| { c.knowledge.knows_color_not.insert(req.color.clone()); })
     }
 
+    pub fn hint_number(&mut self, name: &str, req: &HintNumberRequest) -> Result<Void, &'static str> {
+        self.knowledge_update(&name,
+                              req.positive,
+                              &|c| { c.card.number == req.number },
+                              &|c| { c.knowledge.knows_number = true },
+                              &|c| { c.knowledge.knows_number_not.insert(req.number.clone()); })
+    }
 
-    pub fn hint_number(&mut self, req: &HintNumberRequest) -> Result<(), &'static str> {
-        if let Some(player) = self.players.values_mut().find(|p| p.name == req.target_player) {
-            if self.hint_tokens < 1 {
-                return Err(TODO);
-            } else {
-                self.hint_tokens -= 1;
+    fn knowledge_update(&mut self,
+                        name: &str,
+                        hint_is_positive: bool,
+                        predicate: &Fn(&CardInHand) -> bool,
+                        update_positive: &Fn(&mut CardInHand),
+                        update_negative: &Fn(&mut CardInHand))
+                        -> Result<Void, &'static str>
+    {
+        try!(self.use_hint());
+        let mut player = self.player_by_name(&name);
+        if hint_is_positive {
+            for mut card_in_hand in player.cards.iter_mut().filter(|c| predicate(c)) {
+                update_positive(&mut card_in_hand);
             }
-
-            match req.positive {
-                true => {
-                    for card_in_hand in player.cards.iter_mut().filter(|cih| cih.card.number == req.number) {
-                        card_in_hand.knowledge.knows_number = true;
-                    }
-                    // TODO: implicit know_not?
-                }
-                false => {
-                    for card_in_hand in player.cards.iter_mut().filter(|cih| cih.card.number != req.number) {
-                        card_in_hand.knowledge.knows_number_not.insert(req.number.clone());
-                    }
-                }
-            }
-            Ok(())
         } else {
-            return Err(TODO);
+            for mut card_in_hand in player.cards.iter_mut().filter(|c| !predicate(c)) {
+                update_negative(&mut card_in_hand);
+            }
         }
+        Ok(())
     }
 
     pub fn play_card(&mut self, name: &str, req: &PlayCardRequest) -> CardPlayingResult {
@@ -208,6 +191,14 @@ impl GameState {
         self.players.iter_mut().find(|p| p.name == name).unwrap()
     }
 
+    fn use_hint(&mut self) -> Result<Void, &'static str> {
+        if self.hint_tokens < 1 {
+            Err(NO_HINT_TOKENS)
+        } else {
+            self.hint_tokens -= 1;
+            Ok(())
+        }
+    }
 }
 
 pub enum CardDrawingResult {

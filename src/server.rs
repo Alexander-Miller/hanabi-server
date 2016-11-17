@@ -20,7 +20,9 @@ use responses::{
     ErrorResponse,
     ConnectionResponse,
     DiscardCardResponse,
-    PlayCardResponse
+    PlayCardResponse,
+    HintColorResponse,
+    HintNumberResponse
 };
 
 pub struct Server {
@@ -119,16 +121,16 @@ impl Server {
         }
     }
 
-    fn handle_hint_color_request(&mut self, hint_color_req: &HintColorRequest, con: &Connection) -> Result<()> {
-        match self.game_state.hint_color(&hint_color_req) {
-            Ok(_)         => Ok(()),
+    fn handle_hint_color_request(&mut self, hint_color_req: &HintColorRequest, con: &Connection) -> Result<Void> {
+        match self.game_state.hint_color(self.player_map.get(&con.id).unwrap(), &hint_color_req) {
+            Ok(_)         => self.answer_with_resp_msg(&HintColorResponse, ResponseType::HintColorResposeType, &con),
             Err(err_msg)  => self.answer_with_error_msg(err_msg, None, &con),
         }
     }
 
-    fn handle_hint_number_request(&mut self, hint_number_req: &HintNumberRequest, con: &Connection) -> Result<()> {
-        match self.game_state.hint_number(&hint_number_req) {
-            Ok(_)         => Ok(()),
+    fn handle_hint_number_request(&mut self, hint_number_req: &HintNumberRequest, con: &Connection) -> Result<Void> {
+        match self.game_state.hint_number(self.player_map.get(&con.id).unwrap(), &hint_number_req) {
+            Ok(_)         => self.answer_with_resp_msg(&HintNumberResponse, ResponseType::HintNumberResposeType, &con),
             Err(err_msg)  => self.answer_with_error_msg(err_msg, None, &con),
         }
     }

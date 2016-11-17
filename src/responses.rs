@@ -65,6 +65,13 @@ pub struct DiscardCardResponse;
 #[derive(RustcEncodable)]
 pub struct PlayCardResponse;
 
+
+#[derive(RustcEncodable)]
+pub struct HintColorResponse;
+
+#[derive(RustcEncodable)]
+pub struct HintNumberResponse;
+
 pub mod error_messages {
     pub const MSG_TO_TXT_ERROR:              &'static str = "The received message could not be read as a String.";
     pub const UNABLE_TO_DESERIALIZE_MSG:     &'static str = "The received message could not be deserailized";
@@ -74,6 +81,7 @@ pub mod error_messages {
     pub const ALREADY_CONNECTED:             &'static str = "The Player is already connected.";
     pub const NOT_YET_CONNECTED:             &'static str = "The Player is not yet connected.";
     pub const NO_CARDS:                      &'static str = "The deck has nor more cards.";
+    pub const NO_HINT_TOKENS:                &'static str = "Hint token count is zero, a hint cannot be played.";
     pub const CARD_NOT_FOUND:                &'static str = "The given Card cannot be found on the Player's hand.";
     pub const TODO:                          &'static str = "TODO";
 }
