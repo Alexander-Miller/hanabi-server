@@ -60,7 +60,7 @@ pub struct GameState {
     err_tokens:      u8,
     deck:            Deck,
     played_cards:    HashMap<Color, Number>,
-    players:         HashMap<u8, Player>
+    players:         Vec<Player>,
 }
 
 impl Default for GameState {
@@ -77,32 +77,29 @@ impl GameState {
             err_tokens:      err_tokens,
             deck:            Deck::new(),
             played_cards:    HashMap::new(),
-            players:         HashMap::new(),
+            players:         Vec::with_capacity(6),
         }
     }
 
-    pub fn already_connected(&mut self, id: u8) -> bool {
-        self.player_by_id(id).is_some()
-    }
-
-    pub fn add_player(&mut self, id: u8, name: &str) -> Result<Void, &'static str> {
+    pub fn add_player(&mut self, name: &str) -> Result<Void, &'static str> {
         if self.deck.cards.len() < 5 {
             return Err(NO_CARDS);
         }
 
-        if self.players.values().any(|p| p.name == name) {
+        if self.players.iter().any(|p| p.name == name) {
             return Err(PLAYER_ALREADY_EXISTS);
         }
 
-        let cards = (0..5)
-            .map(|_| CardInHand::new(self.deck.cards.pop().unwrap()))
+        let cards = self.deck.cards
+            .drain(0..5)
+            .map(|c| CardInHand::new(c))
             .collect();
-        self.players.insert(id, Player::new(name.into(), cards));
+        self.players.push(Player::new(name.into(), cards));
         Ok(())
     }
 
-    pub fn discard_card(&mut self, discarding_player_id: u8, discard_req: &DiscardCardRequest) -> CardDrawingResult {
-        let mut player = self.players.get_mut(&discarding_player_id).unwrap();
+    pub fn discard_card(&mut self, name: &str, discard_req: &DiscardCardRequest) -> CardDrawingResult {
+        let mut player = self.players.iter_mut().find(|p| p.name == name).unwrap();
         match player.cards.iter().position(|hc| hc.card == discard_req.discarded_card) {
             None => {
                 error!("Card {} could not be found.", discard_req.discarded_card);
@@ -180,8 +177,8 @@ impl GameState {
         }
     }
 
-    pub fn play_card(&mut self, playing_player_id: u8, req: &PlayCardRequest) -> CardPlayingResult {
-        let mut player = self.players.get_mut(&playing_player_id).unwrap();
+    pub fn play_card(&mut self, name: &str, req: &PlayCardRequest) -> CardPlayingResult {
+        let mut player = self.players.iter_mut().find(|p| p.name == name).unwrap();
         if let Some(i) = player.cards.iter().position(|cih| cih.card == req.played_card) {
             match self.deck.pop() {
                 Some(card) => {
@@ -207,8 +204,8 @@ impl GameState {
         }
     }
 
-    fn player_by_id(&mut self, id: u8) -> Option<&mut Player> {
-        self.players.get_mut(&id)
+    fn player_by_name(&mut self, name: &str) -> &mut Player {
+        self.players.iter_mut().find(|p| p.name == name).unwrap()
     }
 
 }
