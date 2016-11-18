@@ -92,7 +92,7 @@ impl Server {
 
     fn handle_connection_request(&mut self, req: &ConnectionRequest, con: &Connection) -> Result<Void> {
         info!("Handle Connection Request for player \"{}\" from Connection {}.", req.name, con.id);
-        match self.game_state.add_player(self.player_map.get(&con.id).unwrap()) {
+        match self.game_state.add_player(req.name.as_str()) {
             Ok(_) => {
                 info!("Connection success.");
                 self.player_map.insert(con.id, String::from(req.name.clone()));
