@@ -62,9 +62,9 @@ pub struct GameState {
     hint_tokens:     u8,
     hint_tokens_max: u8,
     err_tokens:      u8,
-    deck:            Deck,
     played_cards:    HashMap<Color, Number>,
     players:         Vec<Player>,
+    deck:            Deck,
 }
 
 impl Default for GameState {
@@ -79,9 +79,9 @@ impl GameState {
             hint_tokens:     hint_tokens_max,
             hint_tokens_max: hint_tokens_max,
             err_tokens:      err_tokens,
-            deck:            Deck::new(),
             played_cards:    HashMap::new(),
             players:         Vec::with_capacity(6),
+            deck:            Deck::new(),
         }
     }
 

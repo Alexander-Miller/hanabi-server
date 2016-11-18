@@ -1,4 +1,5 @@
 use rustc_serialize::{json, Encodable};
+use game_state::GameState;
 
 #[derive(Debug)]
 pub enum ResponseType {
@@ -12,18 +13,22 @@ pub enum ResponseType {
 }
 
 #[derive(RustcEncodable)]
-pub struct ResponseMessage {
+pub struct ResponseMessage<'n> {
     pub res_type: ResponseType,
-    payload:  String,
+    payload:      String,
+    next:         Option<&'n str>,
+    game_state:   Option<&'n GameState>,
 }
 
-impl ResponseMessage {
-    pub fn new<T>(res_type: ResponseType, payload: &T) -> Self
+impl<'n> ResponseMessage<'n> {
+    pub fn new<T>(res_type: ResponseType, payload: &T, next: Option<&'n str>, game_state: Option<&'n GameState>) -> Self
         where T: Encodable
     {
         ResponseMessage {
-            res_type: res_type,
-            payload:  json::encode(payload).unwrap(),
+            res_type:   res_type,
+            payload:    json::encode(payload).unwrap(),
+            next:       next,
+            game_state: game_state,
         }
     }
 }
