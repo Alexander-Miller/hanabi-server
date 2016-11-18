@@ -191,6 +191,13 @@ impl GameState {
         }
     }
 
+    pub fn score(&self) -> usize {
+        self.played_cards
+            .values()
+            .map(|n| n.score())
+            .fold(0, |x, y| x + y)
+    }
+
     fn player_by_name(&mut self, name: &str) -> &mut Player {
         self.players.iter_mut().find(|p| p.name == name).unwrap()
     }

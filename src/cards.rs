@@ -23,6 +23,16 @@ impl Number {
             _                                      => false,
         }
     }
+
+    pub fn score(&self) -> usize {
+        match *self {
+            Number::One   => 1,
+            Number::Two   => 2,
+            Number::Three => 3,
+            Number::Four  => 4,
+            Number::Five  => 5,
+        }
+    }
 }
 
 #[derive(RustcDecodable, RustcEncodable, PartialEq, Clone)]
