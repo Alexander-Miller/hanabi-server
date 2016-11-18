@@ -2,7 +2,7 @@ use rustc_serialize::{json, Decodable, Encodable};
 use ws::{CloseCode, Result, Sender};
 use std::error::Error;
 use std::collections::BTreeMap;
-use game_state::{CardDrawingResult, CardPlayingResult, GameState, Void};
+use game_state::{CardPlayingResult, GameState, Void};
 use connection::Connection;
 use requests::RequestType::*;
 use requests::{
@@ -119,15 +119,11 @@ impl Server {
     fn handle_discard_request(&mut self, discard_req: &DiscardCardRequest, con: &Connection) -> Result<Void> {
         info!("Handle Discard Request for card \"{}\" from Connection {}.", discard_req.discarded_card, con.id);
         match self.game_state.discard_card(self.player_map.get(&con.id).unwrap(), &discard_req) {
-            CardDrawingResult::Ok(deck_is_empty) => {
+            Ok(_) => {
                 info!("Card successfully discarded.");
-                if deck_is_empty {
-                    self.finish_count -= 1;
-                    info!("Deck is empty. Game finishes within {} turns.", self.finish_count);
-                }
                 self.response_dispatch(&DiscardCardResponse, ResponseType::DiscardCardResponseType, true, &con)
             }
-            CardDrawingResult::Err(err_msg) => {
+            Err(err_msg) => {
                 info!("Card could not be discarded: {}.", err_msg);
                 self.answer_with_error_msg(err_msg, None, &con)
             }

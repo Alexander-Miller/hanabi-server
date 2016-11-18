@@ -102,5 +102,4 @@ pub mod error_messages {
     pub const NO_CARDS:                      &'static str = "The deck has nor more cards.";
     pub const NO_HINT_TOKENS:                &'static str = "Hint token count is zero, a hint cannot be played.";
     pub const CARD_NOT_FOUND:                &'static str = "The given Card cannot be found on the Player's hand.";
-    pub const TODO:                          &'static str = "TODO";
 }

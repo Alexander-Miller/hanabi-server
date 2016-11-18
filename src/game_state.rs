@@ -102,12 +102,12 @@ impl GameState {
         Ok(())
     }
 
-    pub fn discard_card(&mut self, name: &str, discard_req: &DiscardCardRequest) -> CardDrawingResult {
+    pub fn discard_card(&mut self, name: &str, discard_req: &DiscardCardRequest) -> Result<Void, &'static str> {
         let mut player = self.players.iter_mut().find(|p| p.name == name).unwrap();
         match player.cards.iter().position(|hc| hc.card == discard_req.discarded_card) {
             None => {
                 error!("Card {} could not be found.", discard_req.discarded_card);
-                CardDrawingResult::Err(CARD_NOT_FOUND)
+                Err(CARD_NOT_FOUND)
             }
             Some(i) => {
                 self.hint_tokens += 1;
@@ -115,13 +115,12 @@ impl GameState {
                     Some(card) => {
                         let mut new_card_in_hand = CardInHand::new(card);
                         mem::swap(&mut new_card_in_hand, &mut player.cards[i]);
-                        CardDrawingResult::Ok(false)
                     }
                     None => {
                         player.cards.remove(i);
-                        CardDrawingResult::Ok(true)
                     }
                 }
+                Ok(())
             }
         }
     }
@@ -214,11 +213,6 @@ impl GameState {
             Ok(())
         }
     }
-}
-
-pub enum CardDrawingResult {
-    Ok(bool),
-    Err(&'static str),
 }
 
 pub enum CardPlayingResult {
