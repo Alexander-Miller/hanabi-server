@@ -106,9 +106,9 @@ impl Decodable for RequestType {
         d.read_enum("RequestType", |d|  {
             let names = &["CONNECTION_REQUEST",
                           "DISCARD_REQUEST",
-                          "PLAYCARD_REQUEST",
-                          "HINTCOLOR_REQUEST",
-                          "HINTNUMBER_REQUEST"];
+                          "PLAY_CARD_REQUEST",
+                          "HINT_COLOR_REQUEST",
+                          "HINT_NUMBER_REQUEST"];
             d.read_enum_variant(names, |_, i| {
                 match i {
                     0 => Ok(RequestType::ConnectionRequestType),
