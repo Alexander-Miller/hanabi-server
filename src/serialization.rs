@@ -13,6 +13,7 @@ impl Encodable for ResponseType {
             PlayCardResponseType    => ("PLAY_CARD_RESPONSE",    3),
             HintColorResposeType    => ("HINT_COLOR_RESPONSE",   4),
             HintNumberResposeType   => ("HINT_NUMBER_RESPONSE",  5),
+            GameOverResponseType    => ("GAME_OVER_RESPONSE",    6),
         };
         enc.emit_enum("ResponseType", |enc| {
             enc.emit_enum_variant(name, index, 0, |_| {

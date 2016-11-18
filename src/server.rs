@@ -1,5 +1,5 @@
 use rustc_serialize::{json, Decodable, Encodable};
-use ws::Result;
+use ws::{CloseCode, Result, Sender};
 use std::error::Error;
 use std::collections::HashMap;
 use game_state::{CardDrawingResult, CardPlayingResult, GameState, Void};
@@ -22,13 +22,15 @@ use responses::{
     DiscardCardResponse,
     PlayCardResponse,
     HintColorResponse,
-    HintNumberResponse
+    HintNumberResponse,
+    GameOverResponse
 };
 
 pub struct Server {
     game_state: GameState,
     finish_count: u8,
-    player_map: HashMap<u8, String>
+    player_map: HashMap<u8, String>,
+    connections: Vec<Sender>,
 }
 
 impl Server {
@@ -37,6 +39,7 @@ impl Server {
             game_state:   game_state,
             finish_count: 0,
             player_map:   HashMap::with_capacity(6),
+            connections:  Vec::with_capacity(6),
         }
     }
 
@@ -93,8 +96,9 @@ impl Server {
             Ok(_) => {
                 info!("Connection success.");
                 self.player_map.insert(con.id, String::from(req.name.clone()));
+                self.connections.push(con.out.clone());
                 self.finish_count += 1;
-                self.answer_with_resp_msg(&ConnectionResponse::new(req.name.as_str()), ResponseType::ConnectionResponseType, &con)
+                self.response_dispatch(&ConnectionResponse::new(req.name.as_str()), ResponseType::ConnectionResponseType, &con)
             }
             Err(err_msg) => {
                 info!("Connection failure.");
@@ -112,7 +116,7 @@ impl Server {
                     self.finish_count -= 1;
                     info!("Deck is empty. Game finishes within {} turns.", self.finish_count);
                 }
-                self.answer_with_resp_msg(&DiscardCardResponse, ResponseType::DiscardCardResponseType, &con)
+                self.response_dispatch(&DiscardCardResponse, ResponseType::DiscardCardResponseType, &con)
             }
             CardDrawingResult::Err(err_msg) => {
                 info!("Card could not be discarded: {}.", err_msg);
@@ -123,14 +127,14 @@ impl Server {
 
     fn handle_hint_color_request(&mut self, hint_color_req: &HintColorRequest, con: &Connection) -> Result<Void> {
         match self.game_state.hint_color(self.player_map.get(&con.id).unwrap(), &hint_color_req) {
-            Ok(_)         => self.answer_with_resp_msg(&HintColorResponse, ResponseType::HintColorResposeType, &con),
+            Ok(_)         => self.response_dispatch(&HintColorResponse, ResponseType::HintColorResposeType, &con),
             Err(err_msg)  => self.answer_with_error_msg(err_msg, None, &con),
         }
     }
 
     fn handle_hint_number_request(&mut self, hint_number_req: &HintNumberRequest, con: &Connection) -> Result<Void> {
         match self.game_state.hint_number(self.player_map.get(&con.id).unwrap(), &hint_number_req) {
-            Ok(_)         => self.answer_with_resp_msg(&HintNumberResponse, ResponseType::HintNumberResposeType, &con),
+            Ok(_)         => self.response_dispatch(&HintNumberResponse, ResponseType::HintNumberResposeType, &con),
             Err(err_msg)  => self.answer_with_error_msg(err_msg, None, &con),
         }
     }
@@ -140,15 +144,36 @@ impl Server {
         match self.game_state.play_card(self.player_map.get(&con.id).unwrap(), &play_card_req) {
             CardPlayingResult::Success => {
                 info!("Attempt to play Card {} was successful.", play_card_req.played_card);
-                self.answer_with_resp_msg(&PlayCardResponse, ResponseType::PlayCardResponseType, &con)
+                self.response_dispatch(&PlayCardResponse, ResponseType::PlayCardResponseType, &con)
             }
             CardPlayingResult::Failure => {
                 info!("Attempt to play Card {} has failed.", play_card_req.played_card);
-                self.answer_with_resp_msg(&PlayCardResponse, ResponseType::PlayCardResponseType, &con)
+                self.response_dispatch(&PlayCardResponse, ResponseType::PlayCardResponseType, &con)
             }
             CardPlayingResult::Err(err_msg) => {
                 self.answer_with_error_msg(err_msg, None, &con)
             }
         }
     }
+
+    fn response_dispatch<T>(&mut self, resp: &T, resp_type: ResponseType, con: &Connection) -> Result<Void>
+        where T: Encodable
+    {
+        if self.game_state.deck_is_empty() {
+            self.finish_count -= 1;
+            if self.finish_count == 0 {
+                return self.game_over(&con);
+            }
+        }
+        self.answer_with_resp_msg(&resp, resp_type, &con)
+    }
+
+    fn game_over(&mut self, con: &Connection) -> Result<Void> {
+        self.answer_with_resp_msg(&GameOverResponse::new(self.game_state.score()), ResponseType::GameOverResponseType, &con).unwrap();
+        for out in &self.connections {
+            out.close(CloseCode::Normal).unwrap();
+        }
+        Ok(())
+    }
+
 }

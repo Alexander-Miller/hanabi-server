@@ -198,6 +198,10 @@ impl GameState {
             .fold(0, |x, y| x + y)
     }
 
+    pub fn deck_is_empty(&self) -> bool {
+        self.deck.cards.is_empty()
+    }
+
     fn player_by_name(&mut self, name: &str) -> &mut Player {
         self.players.iter_mut().find(|p| p.name == name).unwrap()
     }

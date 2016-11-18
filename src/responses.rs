@@ -8,6 +8,7 @@ pub enum ResponseType {
     PlayCardResponseType,
     HintColorResposeType,
     HintNumberResposeType,
+    GameOverResponseType,
 }
 
 #[derive(RustcEncodable)]
@@ -71,6 +72,19 @@ pub struct HintColorResponse;
 
 #[derive(RustcEncodable)]
 pub struct HintNumberResponse;
+
+#[derive(RustcEncodable)]
+pub struct GameOverResponse {
+    score: usize
+}
+
+impl GameOverResponse {
+    pub fn new(score: usize) -> Self {
+        GameOverResponse {
+            score: score
+        }
+    }
+}
 
 pub mod error_messages {
     pub const MSG_TO_TXT_ERROR:              &'static str = "The received message could not be read as a String.";
