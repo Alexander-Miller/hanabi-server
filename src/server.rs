@@ -155,6 +155,10 @@ impl Server {
                 info!("Attempt to play Card {} has failed.", play_card_req.played_card);
                 self.response_dispatch(&PlayCardResponse, ResponseType::PlayCardResponseType, true, &con)
             }
+            CardPlayingResult::EpicFail => {
+                info!("Attempt to play Card {} has failed and all error tokens are used up.", play_card_req.played_card);
+                self.game_over(&con)
+            }
             CardPlayingResult::Err(err_msg) => {
                 self.answer_with_error_msg(err_msg, None, &con)
             }

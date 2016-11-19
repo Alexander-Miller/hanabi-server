@@ -182,7 +182,10 @@ impl GameState {
                 }
                 false => {
                     self.err_tokens -= 1;
-                    return CardPlayingResult::Failure;
+                    match self.err_tokens {
+                        0 => return CardPlayingResult::EpicFail,
+                        _ => return CardPlayingResult::Failure,
+                    }
                 }
             }
         } else {
@@ -218,5 +221,6 @@ impl GameState {
 pub enum CardPlayingResult {
     Success,
     Failure,
+    EpicFail,
     Err(&'static str),
 }
