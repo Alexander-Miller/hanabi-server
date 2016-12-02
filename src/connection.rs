@@ -6,6 +6,7 @@ use std::error::Error as StdError;
 use server::Server;
 use responses::error_messages::{MSG_TO_TXT_ERROR, UNABLE_TO_DESERIALIZE_MSG};
 use requests::RequestMessage;
+use game_state::Void;
 
 pub struct Connection {
     pub id:  u8,
@@ -14,8 +15,8 @@ pub struct Connection {
 }
 
 impl Handler for Connection {
-    fn on_open(&mut self, hs: Handshake) -> Result<()> {
-        info!("On Open with Handshake '{:?}'.", hs);
+    fn on_open(&mut self, _: Handshake) -> Result<Void> {
+        info!("On Open.");
         Ok(())
     }
 
@@ -27,8 +28,9 @@ impl Handler for Connection {
         error!("On Error with Error '{}'.", err);
     }
 
-    fn on_message(&mut self, msg: Message) -> Result<()> {
-        info!("On message with Message '{}'", msg);
+    fn on_message(&mut self, msg: Message) -> Result<Void> {
+        info!("On message.");
+        debug!("Message is '{}'.", msg);
         match msg.as_text() {
             Ok(txt) => {
                 match json::decode::<RequestMessage>(&txt) {
@@ -44,7 +46,7 @@ impl Handler for Connection {
 impl Connection {
 
     pub fn new(id: u8, out: Sender, server: Rc<RefCell<Server>>) -> Self {
-        debug!("New Connection instace with id {}", id);
+        debug!("Creating new Connection instace with id {}", id);
         Connection {
             id:     id,
             out:    out,
@@ -52,12 +54,12 @@ impl Connection {
         }
     }
 
-    fn dispatch_err_to_server(&self, explanation: &'static str, details: Option<&str>) -> Result<()> {
+    fn dispatch_err_to_server(&self, explanation: &'static str, details: Option<&str>) -> Result<Void> {
         debug!("Dispatch err to server: \"{}\"", explanation);
         self.server.borrow().answer_with_error_msg(&explanation, details, &self)
     }
 
-    fn dispatch_req_to_server(&self, req: &RequestMessage) -> Result<()> {
+    fn dispatch_req_to_server(&self, req: &RequestMessage) -> Result<Void> {
        debug!("Dispath Request to server: {:?}", req.req_type);
        self.server.borrow_mut().handle_req(&req, &self)
     }

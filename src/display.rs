@@ -1,5 +1,7 @@
 use std::fmt::{Display, Formatter, Result};
 use cards::{Card, Color, Number, Deck};
+use responses::ResponseType;
+use game_state::{CardKnowledge, Player};
 
 impl Display for Color {
     fn fmt(&self, f: &mut Formatter) -> Result {
@@ -25,9 +27,43 @@ impl Display for Number {
     }
 }
 
+impl Display for ResponseType {
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        match *self {
+            ResponseType::ConnectionResponseType  => write!(f, "Connection Response Type"),
+            ResponseType::DiscardCardResponseType => write!(f, "Discard Card Response Type"),
+            ResponseType::ErrorResponseType       => write!(f, "Error Response Type"),
+            ResponseType::GameOverResponseType    => write!(f, "Game Over Response Type"),
+            ResponseType::HintColorResposeType    => write!(f, "Hint Color Respose Type"),
+            ResponseType::HintNumberResposeType   => write!(f, "Hint Number Respose Type"),
+            ResponseType::PlayCardResponseType    => write!(f, "Play Card Response Type"),
+        }
+    }
+}
+
 impl Display for Card {
     fn fmt(&self, f: &mut Formatter) -> Result {
         write!(f, "[{}|{}]", self.color, self.number)
+    }
+}
+
+impl Display for Player {
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        write!(f, "Player {}:", self.name).unwrap();
+        for cih in &self.cards {
+            write!(f, "Card {} with Knowledge {}", cih.card, cih.knowledge).unwrap();
+        }
+        Ok(())
+    }
+}
+
+impl Display for CardKnowledge {
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        write!(f, "Know Color: {}, Know Number: {}, Excluded Colors: {:?}, Excluded Numbers: {:?}",
+               self.knows_color,
+               self.knows_number,
+               self.knows_color_not.iter().map(|c| format!("{}", c)).collect::<Vec<_>>(),
+               self.knows_number_not.iter().map(|n| format!("{}", n)).collect::<Vec<_>>())
     }
 }
 

@@ -57,10 +57,15 @@ impl Server {
     {
         info!("Sending Response of type {:?}.", resp_type);
         let (next, state) = match include_state {
-            false => (None, None),
+            false => {
+                debug!("Answer includes no state.");
+                (None, None)
+            }
             true  => {
                 self.next_count = (self.next_count + 1) % self.player_map.keys().len();
-                (Some(self.player_map.values().nth(self.next_count).as_ref().unwrap().as_str()), Some(&self.game_state))
+                let next = Some(self.player_map.values().nth(self.next_count).as_ref().unwrap().as_str());
+                debug!("Answer includes state. Next player is {}.", next.unwrap());
+                (next, Some(&self.game_state))
             }
         };
         let resp_json = json::encode(&ResponseMessage::new(resp_type, &resp, next, state)).expect(CATASTROPHIC_FUCKUP);
@@ -68,6 +73,7 @@ impl Server {
     }
 
     fn is_connected(&self, id: u8) -> bool {
+        debug!("Check if id {} is connected.", id);
         self.player_map.contains_key(&id)
     }
 
@@ -110,7 +116,7 @@ impl Server {
                 self.response_dispatch(&ConnectionResponse::new(req.name.as_str()), ResponseType::ConnectionResponseType, false, &con)
             }
             Err(err_msg) => {
-                info!("Connection failure.");
+                info!("Connection failure: {}.", err_msg);
                 self.answer_with_error_msg(err_msg, None, &con)
             }
         }
@@ -131,6 +137,7 @@ impl Server {
     }
 
     fn handle_hint_color_request(&mut self, hint_color_req: &HintColorRequest, con: &Connection) -> Result<Void> {
+        info!("Handle Hint Color Request for color \"{}\" from Connection {}.", hint_color_req.color, con.id);
         match self.game_state.hint_color(self.player_map.get(&con.id).unwrap(), &hint_color_req) {
             Ok(_)         => self.response_dispatch(&HintColorResponse, ResponseType::HintColorResposeType, true, &con),
             Err(err_msg)  => self.answer_with_error_msg(err_msg, None, &con),
@@ -138,6 +145,7 @@ impl Server {
     }
 
     fn handle_hint_number_request(&mut self, hint_number_req: &HintNumberRequest, con: &Connection) -> Result<Void> {
+        info!("Handle Hint Number Request for color \"{}\" from Connection {}.", hint_number_req.number, con.id);
         match self.game_state.hint_number(self.player_map.get(&con.id).unwrap(), &hint_number_req) {
             Ok(_)         => self.response_dispatch(&HintNumberResponse, ResponseType::HintNumberResposeType, true, &con),
             Err(err_msg)  => self.answer_with_error_msg(err_msg, None, &con),
@@ -168,8 +176,10 @@ impl Server {
     fn response_dispatch<T>(&mut self, resp: &T, resp_type: ResponseType, include_state: bool, con: &Connection) -> Result<Void>
         where T: Encodable
     {
+        debug!("Dispatching reponse of type: {}, with included state: {} for connection {}.", resp_type, include_state, con.id);
         if self.game_state.deck_is_empty() {
             self.finish_count -= 1;
+            debug!("Deck is empty. {} turns left till game over.", self.finish_count);
             if self.finish_count == 0 {
                 return self.game_over(&con);
             }
@@ -179,6 +189,7 @@ impl Server {
 
     fn game_over(&mut self, con: &Connection) -> Result<Void> {
         let score = self.game_state.score();
+        info!("Game Over! Final score: {}.", score);
         self.answer_with_resp_msg(&GameOverResponse::new(score), ResponseType::GameOverResponseType, false, &con).unwrap();
         for out in &self.connections {
             out.close(CloseCode::Normal).unwrap();

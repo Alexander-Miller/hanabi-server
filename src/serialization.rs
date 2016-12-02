@@ -3,9 +3,10 @@ use responses::ResponseType;
 use responses::ResponseType::*;
 use requests::RequestType;
 use cards::{Color, Number};
+use game_state::Void;
 
 impl Encodable for ResponseType {
-    fn encode<E: Encoder>(&self, enc: &mut E) -> Result<(), E::Error> {
+    fn encode<E: Encoder>(&self, enc: &mut E) -> Result<Void, E::Error> {
         let (name, index) = match *self {
             ErrorResponseType       => ("ERROR_RESPONSE",        0),
             ConnectionResponseType  => ("CONNECTION_RESPONSE",   1),
@@ -24,7 +25,7 @@ impl Encodable for ResponseType {
 }
 
 impl Encodable for Color {
-    fn encode<E: Encoder>(&self, enc: &mut E) -> Result<(), E::Error> {
+    fn encode<E: Encoder>(&self, enc: &mut E) -> Result<Void, E::Error> {
         let (name, index) = match *self {
             Color::Red    => ("RED",    0),
             Color::Yellow => ("YELLOW", 1),
@@ -41,7 +42,7 @@ impl Encodable for Color {
 }
 
 impl Encodable for Number {
-    fn encode<E: Encoder>(&self, enc: &mut E) -> Result<(), E::Error> {
+    fn encode<E: Encoder>(&self, enc: &mut E) -> Result<Void, E::Error> {
         let (name, index) = match *self {
             Number::One   => ("ONE",   0),
             Number::Two   => ("TWO",   1),
