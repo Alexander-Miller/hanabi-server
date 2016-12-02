@@ -187,7 +187,7 @@ impl Server {
     fn handle_game_start_request(&mut self, _: &GameStartRequest, con: &Connection) -> Result<Void> {
         info!("Starting game.");
         self.game_started = true;
-        self.response_dispatch(&GameStartResponse, ResponseType::GameStartResponseType, false, &con)
+        self.response_dispatch(&GameStartResponse, ResponseType::GameStartResponseType, true, &con)
     }
 
     fn response_dispatch<T>(&mut self, resp: &T, resp_type: ResponseType, include_state: bool, con: &Connection) -> Result<Void>
