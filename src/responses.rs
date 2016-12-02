@@ -10,6 +10,7 @@ pub enum ResponseType {
     HintColorResposeType,
     HintNumberResposeType,
     GameOverResponseType,
+    GameStartResponseType,
 }
 
 #[derive(RustcEncodable)]
@@ -83,6 +84,9 @@ pub struct GameOverResponse {
     score: usize
 }
 
+#[derive(RustcEncodable)]
+pub struct GameStartResponse;
+
 impl GameOverResponse {
     pub fn new(score: usize) -> Self {
         GameOverResponse {
@@ -98,6 +102,7 @@ pub mod error_messages {
     pub const CATASTROPHIC_FUCKUP:           &'static str = "Catastrophic Fuckup! The server's done goofed.";
     pub const PLAYER_ALREADY_EXISTS:         &'static str = "A Player with the chosen name already exists.";
     pub const ALREADY_CONNECTED:             &'static str = "The Player is already connected.";
+    pub const GAME_ALREADY_STARTED:          &'static str = "Connection refused because the game has already started.";
     pub const NOT_YET_CONNECTED:             &'static str = "The Player is not yet connected.";
     pub const NO_CARDS:                      &'static str = "The deck has nor more cards.";
     pub const NO_HINT_TOKENS:                &'static str = "Hint token count is zero, a hint cannot be played.";

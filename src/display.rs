@@ -37,6 +37,7 @@ impl Display for ResponseType {
             ResponseType::HintColorResposeType    => write!(f, "Hint Color Respose Type"),
             ResponseType::HintNumberResposeType   => write!(f, "Hint Number Respose Type"),
             ResponseType::PlayCardResponseType    => write!(f, "Play Card Response Type"),
+            ResponseType::GameStartResponseType   => write!(f, "Game Start Response Type"),
         }
     }
 }

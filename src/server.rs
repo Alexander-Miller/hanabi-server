@@ -11,7 +11,8 @@ use requests::{
     DiscardCardRequest,
     HintColorRequest,
     HintNumberRequest,
-    PlayCardRequest
+    PlayCardRequest,
+    GameStartRequest
 };
 use responses::error_messages::*;
 use responses::{
@@ -23,7 +24,8 @@ use responses::{
     PlayCardResponse,
     HintColorResponse,
     HintNumberResponse,
-    GameOverResponse
+    GameOverResponse,
+    GameStartResponse
 };
 
 pub struct Server {
@@ -32,6 +34,7 @@ pub struct Server {
     next_count:   usize,
     player_map:   BTreeMap<u8, String>,
     connections:  Vec<Sender>,
+    game_started: bool,
 }
 
 impl Server {
@@ -42,6 +45,7 @@ impl Server {
             next_count:   0,
             player_map:   BTreeMap::new(),
             connections:  Vec::with_capacity(6),
+            game_started: false,
         }
     }
 
@@ -79,17 +83,24 @@ impl Server {
 
     pub fn handle_req(&mut self, req: &RequestMessage, con: &Connection) -> Result<Void> {
         info!("Received Request: {:?} from Connnection {}.", req.req_type, con.id);
-        match (self.is_connected(con.id), req.req_type == ConnectionRequestType) {
-            (true, true)   => self.answer_with_error_msg(ALREADY_CONNECTED, None, &con),
-            (false, false) => self.answer_with_error_msg(NOT_YET_CONNECTED, None, &con),
-            (_ , _)        => {
-                match req.req_type {
-                    ConnectionRequestType  => self.dispatch_req::<ConnectionRequest>(&req, &con, &mut Self::handle_connection_request),
-                    DiscardCardRequestType => self.dispatch_req::<DiscardCardRequest>(&req, &con, &mut Self::handle_discard_request),
-                    HintColorRequestType   => self.dispatch_req::<HintColorRequest>(&req, &con, &mut Self::handle_hint_color_request),
-                    HintNumberRequestType  => self.dispatch_req::<HintNumberRequest>(&req, &con, &mut Self::handle_hint_number_request),
-                    PlayCardRequestType    => self.dispatch_req::<PlayCardRequest>(&req, &con, &mut Self::handle_play_card_request),
-                }
+        let already_connected = self.is_connected(con.id);
+        let is_connecting     = req.req_type == ConnectionRequestType;
+        let game_started      = self.game_started;
+
+        if already_connected && is_connecting {
+            self.answer_with_error_msg(ALREADY_CONNECTED, None, &con)
+        } else if game_started && is_connecting {
+            self.answer_with_error_msg(GAME_ALREADY_STARTED, None, &con)
+        } else if !already_connected && !is_connecting {
+            self.answer_with_error_msg(NOT_YET_CONNECTED, None, &con)
+        } else {
+            match req.req_type {
+                ConnectionRequestType  => self.dispatch_req::<ConnectionRequest>(&req, &con, &mut Self::handle_connection_request),
+                DiscardCardRequestType => self.dispatch_req::<DiscardCardRequest>(&req, &con, &mut Self::handle_discard_request),
+                HintColorRequestType   => self.dispatch_req::<HintColorRequest>(&req, &con, &mut Self::handle_hint_color_request),
+                HintNumberRequestType  => self.dispatch_req::<HintNumberRequest>(&req, &con, &mut Self::handle_hint_number_request),
+                PlayCardRequestType    => self.dispatch_req::<PlayCardRequest>(&req, &con, &mut Self::handle_play_card_request),
+                GameStartRequestType   => self.dispatch_req::<GameStartRequest>(&req, &con, &mut Self::handle_game_start_request),
             }
         }
     }
@@ -171,6 +182,12 @@ impl Server {
                 self.answer_with_error_msg(err_msg, None, &con)
             }
         }
+    }
+
+    fn handle_game_start_request(&mut self, _: &GameStartRequest, con: &Connection) -> Result<Void> {
+        info!("Starting game.");
+        self.game_started = true;
+        self.response_dispatch(&GameStartResponse, ResponseType::GameStartResponseType, false, &con)
     }
 
     fn response_dispatch<T>(&mut self, resp: &T, resp_type: ResponseType, include_state: bool, con: &Connection) -> Result<Void>

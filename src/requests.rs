@@ -7,6 +7,7 @@ pub enum RequestType {
     HintColorRequestType,
     HintNumberRequestType,
     PlayCardRequestType,
+    GameStartRequestType,
 }
 
 #[derive(RustcDecodable)]
@@ -43,3 +44,6 @@ pub struct HintNumberRequest {
 pub struct PlayCardRequest {
     pub played_card: Card
 }
+
+#[derive(RustcDecodable)]
+pub struct GameStartRequest;

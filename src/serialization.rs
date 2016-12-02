@@ -15,6 +15,7 @@ impl Encodable for ResponseType {
             HintColorResposeType    => ("HINT_COLOR_RESPONSE",   4),
             HintNumberResposeType   => ("HINT_NUMBER_RESPONSE",  5),
             GameOverResponseType    => ("GAME_OVER_RESPONSE",    6),
+            GameStartResponseType   => ("GAME_START_RESPONSE",   7)
         };
         enc.emit_enum("ResponseType", |enc| {
             enc.emit_enum_variant(name, index, 0, |_| {
@@ -107,16 +108,18 @@ impl Decodable for RequestType {
         d.read_enum("RequestType", |d|  {
             let names = &["CONNECTION_REQUEST",
                           "DISCARD_REQUEST",
-                          "PLAY_CARD_REQUEST",
                           "HINT_COLOR_REQUEST",
-                          "HINT_NUMBER_REQUEST"];
+                          "HINT_NUMBER_REQUEST",
+                          "PLAY_CARD_REQUEST",
+                          "GAME_START_REQUEST"];
             d.read_enum_variant(names, |_, i| {
                 match i {
                     0 => Ok(RequestType::ConnectionRequestType),
                     1 => Ok(RequestType::DiscardCardRequestType),
-                    2 => Ok(RequestType::PlayCardRequestType),
-                    3 => Ok(RequestType::HintColorRequestType),
-                    4 => Ok(RequestType::HintNumberRequestType),
+                    2 => Ok(RequestType::HintColorRequestType),
+                    3 => Ok(RequestType::HintNumberRequestType),
+                    4 => Ok(RequestType::PlayCardRequestType),
+                    5 => Ok(RequestType::GameStartRequestType),
                     _ => unreachable!(),
                 }
             })
