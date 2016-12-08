@@ -44,7 +44,7 @@ impl Display for ResponseType {
 
 impl Display for Card {
     fn fmt(&self, f: &mut Formatter) -> Result {
-        write!(f, "[{}|{}]", self.color, self.number)
+        write!(f, "{}:[{}|{}]", self.id, self.color, self.number)
     }
 }
 
