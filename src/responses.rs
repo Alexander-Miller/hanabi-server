@@ -106,6 +106,5 @@ pub mod error_messages {
     pub const NOT_YET_CONNECTED:             &'static str = "The Player is not yet connected.";
     pub const NO_CARDS:                      &'static str = "The deck has nor more cards.";
     pub const NO_HINT_TOKENS:                &'static str = "Hint token count is zero, a hint cannot be played.";
-    pub const CANNOT_EXCEED_MAX_HINTS:       &'static str = "Amount of hint tokens is already at its maximum.";
     pub const CARD_NOT_FOUND:                &'static str = "The given Card cannot be found on the Player's hand.";
 }

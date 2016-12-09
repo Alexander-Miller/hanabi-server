@@ -112,11 +112,6 @@ impl GameState {
     pub fn discard_card(&mut self, name: &str, discard_req: &DiscardCardRequest) -> Result<Void, &'static str> {
         debug!("Discarding card {} of player {}.", discard_req.discarded_card, name);
 
-        if self.hint_tokens == self.hint_tokens_max {
-            error!("Cannot discard, number of hint tokens is already at maximum.");
-            return Err(CANNOT_EXCEED_MAX_HINTS);
-        }
-
         let mut player = self.players.iter_mut().find(|p| p.name == name).unwrap();
         match player.cards.iter().position(|hc| hc.card == discard_req.discarded_card) {
             None => {
@@ -124,7 +119,9 @@ impl GameState {
                 Err(CARD_NOT_FOUND)
             }
             Some(i) => {
-                self.hint_tokens += 1;
+                if self.hint_tokens < self.hint_tokens_max {
+                    self.hint_tokens += 1;
+                }
                 match self.deck.pop() {
                     Some(card) => {
                         debug!("Card discarded and new card drawn.");
