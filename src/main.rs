@@ -27,6 +27,7 @@ fn main() {
     let token_cell = Cell::new(0);
 
     // TODO: factory?
+    info!("Start listening for incoming connections.");
     ws::listen("0.0.0.0:4444", |out| {
         let id = token_cell.get();
         token_cell.set(id + 1);

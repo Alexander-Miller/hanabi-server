@@ -30,14 +30,12 @@ pub struct DiscardCardRequest {
 pub struct HintColorRequest {
     pub target_player: String,
     pub color:         Color,
-    pub positive:      bool,
 }
 
 #[derive(RustcDecodable)]
 pub struct HintNumberRequest {
     pub target_player: String,
     pub number:        Number,
-    pub positive:      bool,
 }
 
 #[derive(RustcDecodable)]

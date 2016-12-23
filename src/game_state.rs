@@ -72,6 +72,7 @@ pub struct GameState {
 
 impl Default for GameState {
     fn default() -> Self {
+        debug!("Creating default game state.");
         GameState::new(DEFAULT_HINT_TOKENS, DEFAULT_ERR_TOKENS)
     }
 }
@@ -145,7 +146,6 @@ impl GameState {
     pub fn hint_color(&mut self, name: &str, req: &HintColorRequest) -> Result<Void, &'static str> {
         debug!("Hinting color {} for player {}.", req.color, name);
         self.knowledge_update(req.target_player.as_str(),
-                              req.positive,
                               &|c| { c.card.color == req.color },
                               &|c| { c.knowledge.knows_color = true },
                               &|c| { c.knowledge.knows_color_not.insert(req.color.clone()); })
@@ -154,7 +154,6 @@ impl GameState {
     pub fn hint_number(&mut self, name: &str, req: &HintNumberRequest) -> Result<Void, &'static str> {
         debug!("Hinting number {} for player {}.", req.number, name);
         self.knowledge_update(req.target_player.as_str(),
-                              req.positive,
                               &|c| { c.card.number == req.number },
                               &|c| { c.knowledge.knows_number = true },
                               &|c| { c.knowledge.knows_number_not.insert(req.number.clone()); })
@@ -162,22 +161,18 @@ impl GameState {
 
     fn knowledge_update(&mut self,
                         name: &str,
-                        hint_is_positive: bool,
                         predicate: &Fn(&CardInHand) -> bool,
                         update_positive: &Fn(&mut CardInHand),
                         update_negative: &Fn(&mut CardInHand))
                         -> Result<Void, &'static str>
     {
-        debug!("Update {} knowledge for player {}.", if hint_is_positive { "positive " } else { "negative" }, name);
+        debug!("Update knowledge for player {}.", name);
         try!(self.use_hint());
         let mut player = self.player_by_name(&name);
-        if hint_is_positive {
-            for mut card_in_hand in player.cards.iter_mut().filter(|c| predicate(c)) {
-                update_positive(&mut card_in_hand);
-            }
-        } else {
-            for mut card_in_hand in player.cards.iter_mut().filter(|c| !predicate(c)) {
-                update_negative(&mut card_in_hand);
+        for mut card_in_hand in &mut player.cards {
+            match predicate(&card_in_hand) {
+                true  => update_positive(&mut card_in_hand),
+                false => update_negative(&mut card_in_hand),
             }
         }
         Ok(())

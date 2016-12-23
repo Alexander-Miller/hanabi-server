@@ -39,6 +39,7 @@ pub struct Server {
 
 impl Server {
     pub fn new(game_state: GameState) -> Self {
+        debug!("Creating new server instance.");
         Server {
             game_state:   game_state,
             finish_count: 0,
