@@ -1,11 +1,9 @@
 use ws::{Handler, Message, Sender, Handshake, Result, CloseCode, Error};
-use rustc_serialize::json;
 use std::rc::Rc;
 use std::cell::RefCell;
 use std::error::Error as StdError;
 use server::Server;
-use responses::error_messages::{MSG_TO_TXT_ERROR, UNABLE_TO_DESERIALIZE_MSG};
-use requests::RequestMessage;
+use responses::error_messages::MSG_TO_TXT_ERROR;
 use game_state::Void;
 
 pub struct Connection {
@@ -30,14 +28,8 @@ impl Handler for Connection {
 
     fn on_message(&mut self, msg: Message) -> Result<Void> {
         info!("On message.");
-        debug!("Message is '{}'.", msg);
         match msg.as_text() {
-            Ok(txt) => {
-                match json::decode::<RequestMessage>(&txt) {
-                    Ok(req) => self.dispatch_req_to_server(&req),
-                    Err(e)  => self.dispatch_err_to_server(UNABLE_TO_DESERIALIZE_MSG, Some(e.description())),
-                }
-            }
+            Ok(txt) => self.dispatch_req_to_server(&txt),
             Err(e)  => self.dispatch_err_to_server(MSG_TO_TXT_ERROR, Some(e.description())),
         }
     }
@@ -59,8 +51,8 @@ impl Connection {
         self.server.borrow().answer_with_error_msg(&explanation, details, &self)
     }
 
-    fn dispatch_req_to_server(&self, req: &RequestMessage) -> Result<Void> {
-       debug!("Dispath Request to server: {:?}", req.req_type);
+    fn dispatch_req_to_server(&self, req: &str) -> Result<Void> {
+       debug!("Dispath Request to server.");
        self.server.borrow_mut().handle_req(&req, &self)
     }
 }

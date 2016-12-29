@@ -11,37 +11,38 @@ pub enum RequestType {
 }
 
 #[derive(RustcDecodable)]
-pub struct RequestMessage {
-    pub req_type: RequestType,
-    pub payload:  String,
-}
-
-#[derive(RustcDecodable)]
 pub struct ConnectionRequest {
-    pub name: String
+    pub msg_type: RequestType,
+    pub name:     String
 }
 
 #[derive(RustcDecodable)]
 pub struct DiscardCardRequest {
+    pub msg_type:       RequestType,
     pub discarded_card: Card
 }
 
 #[derive(RustcDecodable)]
 pub struct HintColorRequest {
+    pub msg_type:      RequestType,
     pub target_player: String,
     pub color:         Color,
 }
 
 #[derive(RustcDecodable)]
 pub struct HintNumberRequest {
+    pub msg_type:      RequestType,
     pub target_player: String,
     pub number:        Number,
 }
 
 #[derive(RustcDecodable)]
 pub struct PlayCardRequest {
+    pub msg_type:    RequestType,
     pub played_card: Card
 }
 
 #[derive(RustcDecodable)]
-pub struct GameStartRequest;
+pub struct GameStartRequest {
+    pub msg_type: RequestType,
+}
