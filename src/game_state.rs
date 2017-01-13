@@ -8,7 +8,7 @@ use responses::error_messages::*;
 
 pub type Void = ();
 
-const DEFAULT_HINT_TOKENS: u8 = 7;
+const DEFAULT_HINT_TOKENS: u8 = 8;
 const DEFAULT_ERR_TOKENS:  u8 = 3;
 
 #[derive(RustcEncodable)]
