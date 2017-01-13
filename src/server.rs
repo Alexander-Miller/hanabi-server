@@ -103,11 +103,10 @@ impl Server {
         info!("Received Request of type {:?} from Connnection {}.", req_type, con.id);
         let already_connected = self.is_connected(con.id);
         let is_connecting     = req_type == ConnectionRequestType;
-        let game_started      = self.game_started;
 
         if already_connected && is_connecting {
             self.answer_with_error_msg(ALREADY_CONNECTED, None, &con)
-        } else if game_started && is_connecting {
+        } else if self.game_started && is_connecting {
             self.answer_with_error_msg(GAME_ALREADY_STARTED, None, &con)
         } else if !already_connected && !is_connecting {
             self.answer_with_error_msg(NOT_YET_CONNECTED, None, &con)
@@ -220,7 +219,7 @@ impl Server {
     fn handle_game_start_request(&mut self, _: &GameStartRequest, con: &Connection) -> Result<Void> {
         info!("Starting game.");
         self.game_started = true;
-        let response = &self.encode_response(&GameStartResponse::new());
+        let response = &self.encode_response(&GameStartResponse::new(&self.next_player, &self.game_state));
         self.answer_with_resp_msg(response, &con)
     }
 
@@ -251,9 +250,5 @@ impl Server {
         self.next_count  = (self.next_count + 1) % self.player_map.keys().len();
         self.next_player = self.player_map.values().nth(self.next_count).unwrap().clone();
     }
-
-    // fn next_player(&self) -> &str {
-    //     self.next_player.as_str()
-    // }
 
 }

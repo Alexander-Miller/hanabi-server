@@ -133,14 +133,18 @@ impl GameOverResponse {
 }
 
 #[derive(RustcEncodable)]
-pub struct GameStartResponse {
-    msg_type: ResponseType
+pub struct GameStartResponse<'s> {
+    msg_type: ResponseType,
+    next_player: &'s str,
+    game_state:  &'s GameState,
 }
 
-impl GameStartResponse {
-    pub fn new() -> Self {
+impl<'s> GameStartResponse<'s> {
+    pub fn new(next_player: &'s str, game_state: &'s GameState) -> Self {
         GameStartResponse {
-            msg_type: GameStartResponseType
+            msg_type:    GameStartResponseType,
+            next_player: next_player,
+            game_state:  game_state,
         }
     }
 }
