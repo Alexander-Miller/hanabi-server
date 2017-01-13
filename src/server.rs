@@ -219,6 +219,7 @@ impl Server {
     fn handle_game_start_request(&mut self, _: &GameStartRequest, con: &Connection) -> Result<Void> {
         info!("Starting game.");
         self.game_started = true;
+        self.set_next_player();
         let response = &self.encode_response(&GameStartResponse::new(&self.next_player, &self.game_state));
         self.answer_with_resp_msg(response, &con)
     }
