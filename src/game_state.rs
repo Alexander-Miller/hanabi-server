@@ -147,7 +147,7 @@ impl GameState {
         debug!("Hinting color {} for player {}.", req.color, name);
         self.knowledge_update(req.target_player.as_str(),
                               &|c| { c.card.color == req.color },
-                              &|c| { c.knowledge.knows_color = true },
+                              &|c| { c.knowledge.knows_color = true; c.knowledge.knows_color_not.clear(); },
                               &|c| { c.knowledge.knows_color_not.insert(req.color.clone()); })
     }
 
@@ -155,7 +155,7 @@ impl GameState {
         debug!("Hinting number {} for player {}.", req.number, name);
         self.knowledge_update(req.target_player.as_str(),
                               &|c| { c.card.number == req.number },
-                              &|c| { c.knowledge.knows_number = true },
+                              &|c| { c.knowledge.knows_number = true; c.knowledge.knows_number_not.clear(); },
                               &|c| { c.knowledge.knows_number_not.insert(req.number.clone()); })
     }
 
