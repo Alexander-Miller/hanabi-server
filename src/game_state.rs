@@ -198,6 +198,12 @@ impl GameState {
                     self.played_cards.insert(req.played_card.color.clone(), req.played_card.number.clone());
                     debug!("Play card success. Currently played cards: {:?}",
                            self.played_cards.iter().map(|(color, number)| format!("{}: {}", color, number)).collect::<Vec<_>>());
+
+                    if req.played_card.number == Number::Five && self.hint_tokens < self.hint_tokens_max {
+                        self.hint_tokens += 1;
+                        debug!("Played a Five - number of hint tokens increased to {}.", self.hint_tokens);
+                    }
+
                     return CardPlayingResult::Success;
                 }
                 false => {

@@ -38,7 +38,7 @@ impl Handler for Connection {
 impl Connection {
 
     pub fn new(id: u8, out: Sender, server: Rc<RefCell<Server>>) -> Self {
-        debug!("Creating new Connection instace with id {}", id);
+        debug!("Creating new Connection instance with id {}", id);
         Connection {
             id:     id,
             out:    out,
