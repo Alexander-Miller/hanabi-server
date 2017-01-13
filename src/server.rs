@@ -89,7 +89,7 @@ impl Server {
                 Some(t_str) => t_str,
                 None        => return Err(()),
             };
-            match json::decode::<RequestType>(&type_str) {
+            match json::decode::<RequestType>(format!("\"{}\"", type_str).as_str()) {
                 Ok(req_type) => Ok(req_type),
                 Err(_)       => Err(())
             }
