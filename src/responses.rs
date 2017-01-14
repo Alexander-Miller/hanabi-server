@@ -34,17 +34,16 @@ impl ErrorResponse {
 }
 
 #[derive(RustcEncodable)]
-pub struct ConnectionResponse {
+pub struct ConnectionResponse<'s> {
     msg_type: ResponseType,
-    name:     String
+    names:    Vec<&'s str>,
 }
 
-impl ConnectionResponse {
-    pub fn new<S>(name: S) -> Self
-        where S: Into<String> {
+impl<'s> ConnectionResponse<'s> {
+    pub fn new(names: Vec<&'s str>) -> Self {
         ConnectionResponse {
             msg_type: ConnectionResponseType,
-            name:     name.into()
+            names:    names,
         }
     }
 }

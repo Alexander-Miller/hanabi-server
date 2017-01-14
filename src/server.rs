@@ -141,7 +141,7 @@ impl Server {
                 self.player_map.insert(con.id, String::from(req.name.clone()));
                 self.connections.push(con.out.clone());
                 self.finish_count += 1;
-                let response = &self.encode_response(&ConnectionResponse::new(req.name.as_str()));
+                let response = &self.encode_response(&ConnectionResponse::new(self.player_map.values().map(|n| n.as_str()).collect::<Vec<&str>>()));
                 self.answer_with_resp_msg(response, &con)
             }
             Err(err_msg) => {
