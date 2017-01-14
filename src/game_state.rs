@@ -68,6 +68,7 @@ pub struct GameState {
     played_cards:    HashMap<Color, Number>,
     players:         Vec<Player>,
     deck:            Deck,
+    discarded_cards: Vec<Card>,
 }
 
 impl Default for GameState {
@@ -86,6 +87,7 @@ impl GameState {
             played_cards:    HashMap::new(),
             players:         Vec::with_capacity(6),
             deck:            Deck::new(),
+            discarded_cards: Vec::with_capacity(50),
         }
     }
 
@@ -124,17 +126,18 @@ impl GameState {
                     self.hint_tokens += 1;
                 }
                 match self.deck.pop() {
-                    Some(card) => {
+                    Some(new_card) => {
                         debug!("Card discarded and new card drawn.");
                         debug!("Player state before discard: {}", player);
-                        let mut new_card_in_hand = CardInHand::new(card);
+                        let mut new_card_in_hand = CardInHand::new(new_card);
                         mem::swap(&mut new_card_in_hand, &mut player.cards[i]);
+                        self.discarded_cards.push(new_card_in_hand.card);
                         debug!("Player state after discard: {}", player);
                     }
                     None => {
                         debug!("Deck is empty and removed card will not be replaced.");
                         debug!("Player state before discard: {}", player);
-                        player.cards.remove(i);
+                        self.discarded_cards.push(player.cards.remove(i).card);
                         debug!("Player state after discard: {}", player);
                     }
                 }
