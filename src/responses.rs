@@ -53,14 +53,16 @@ pub struct DiscardCardResponse<'s> {
     msg_type:    ResponseType,
     next_player: &'s str,
     game_state:  &'s GameState,
+    turns_left:  Option<usize>,
 }
 
 impl<'s> DiscardCardResponse<'s> {
-    pub fn new(next_player: &'s str, game_state: &'s GameState) -> Self {
+    pub fn new(next_player: &'s str, game_state: &'s GameState, turns_left: Option<usize>) -> Self {
         DiscardCardResponse {
             msg_type:    DiscardCardResponseType,
             next_player: next_player,
             game_state:  game_state,
+            turns_left:  turns_left,
         }
     }
 }
@@ -70,14 +72,16 @@ pub struct PlayCardResponse<'s> {
     msg_type:    ResponseType,
     next_player: &'s str,
     game_state:  &'s GameState,
+    turns_left:  Option<usize>,
 }
 
 impl<'s> PlayCardResponse<'s> {
-    pub fn new(next_player: &'s str, game_state: &'s GameState) -> Self {
+    pub fn new(next_player: &'s str, game_state: &'s GameState, turns_left: Option<usize>) -> Self {
         PlayCardResponse {
             msg_type:    PlayCardResponseType,
             next_player: next_player,
             game_state:  game_state,
+            turns_left:  turns_left,
         }
     }
 }
@@ -87,14 +91,16 @@ pub struct HintColorResponse<'s> {
     msg_type:    ResponseType,
     next_player: &'s str,
     game_state:  &'s GameState,
+    turns_left:  Option<usize>,
 }
 
 impl<'s> HintColorResponse<'s> {
-    pub fn new(next_player: &'s str, game_state: &'s GameState) -> Self {
+    pub fn new(next_player: &'s str, game_state: &'s GameState, turns_left: Option<usize>) -> Self {
         HintColorResponse {
             msg_type:    HintColorResposeType,
             next_player: next_player,
             game_state:  game_state,
+            turns_left:  turns_left,
         }
     }
 }
@@ -104,14 +110,16 @@ pub struct HintNumberResponse<'s> {
     msg_type:    ResponseType,
     next_player: &'s str,
     game_state:  &'s GameState,
+    turns_left:  Option<usize>,
 }
 
 impl<'s> HintNumberResponse<'s> {
-    pub fn new(next_player: &'s str, game_state: &'s GameState) -> Self {
+    pub fn new(next_player: &'s str, game_state: &'s GameState, turns_left: Option<usize>) -> Self {
         HintNumberResponse {
             msg_type:    HintNumberResposeType,
             next_player: next_player,
             game_state:  game_state,
+            turns_left:  turns_left,
         }
     }
 }

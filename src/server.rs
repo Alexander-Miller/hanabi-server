@@ -157,7 +157,7 @@ impl Server {
             Ok(_) => {
                 info!("Card successfully discarded.");
                 self.set_next_player();
-                let response = &self.encode_response(&DiscardCardResponse::new(&self.next_player, &self.game_state));
+                let response = &self.encode_response(&DiscardCardResponse::new(&self.next_player, &self.game_state, self.turns_left()));
                 self.answer_with_resp_msg(response, &con)
             }
             Err(err_msg) => {
@@ -172,7 +172,7 @@ impl Server {
         match self.game_state.hint_color(self.player_map.get(&con.id).unwrap(), &hint_color_req) {
             Ok(_) => {
                 self.set_next_player();
-                let response = &self.encode_response(&HintColorResponse::new(&self.next_player, &self.game_state));
+                let response = &self.encode_response(&HintColorResponse::new(&self.next_player, &self.game_state, self.turns_left()));
                 self.answer_with_resp_msg(response, &con)
             }
             Err(err_msg) => self.answer_with_error_msg(err_msg, None, &con),
@@ -184,7 +184,7 @@ impl Server {
         match self.game_state.hint_number(self.player_map.get(&con.id).unwrap(), &hint_number_req) {
             Ok(_) => {
                 self.set_next_player();
-                let response = &self.encode_response(&HintNumberResponse::new(&self.next_player, &self.game_state));
+                let response = &self.encode_response(&HintNumberResponse::new(&self.next_player, &self.game_state, self.turns_left()));
                 self.answer_with_resp_msg(response, &con)
             }
             Err(err_msg) => self.answer_with_error_msg(err_msg, None, &con),
@@ -197,13 +197,13 @@ impl Server {
             CardPlayingResult::Success => {
                 info!("Attempt to play Card {} was successful.", play_card_req.played_card);
                 self.set_next_player();
-                let response = &self.encode_response(&PlayCardResponse::new(&self.next_player, &self.game_state));
+                let response = &self.encode_response(&PlayCardResponse::new(&self.next_player, &self.game_state, self.turns_left()));
                 self.answer_with_resp_msg(response, &con)
             }
             CardPlayingResult::Failure => {
                 info!("Attempt to play {} has failed.", play_card_req.played_card);
                 self.set_next_player();
-                let response = &self.encode_response(&PlayCardResponse::new(&self.next_player, &self.game_state));
+                let response = &self.encode_response(&PlayCardResponse::new(&self.next_player, &self.game_state, self.turns_left()));
                 self.answer_with_resp_msg(response, &con)
             }
             CardPlayingResult::EpicFail => {
@@ -250,6 +250,13 @@ impl Server {
     fn set_next_player(&mut self) {
         self.next_count  = (self.next_count + 1) % self.player_map.keys().len();
         self.next_player = self.player_map.values().nth(self.next_count).unwrap().clone();
+    }
+
+    fn turns_left(&self) -> Option<usize> {
+        match self.game_state.deck_is_empty() {
+            true  => Some(self.finish_count),
+            false => None,
+        }
     }
 
 }
