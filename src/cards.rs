@@ -1,6 +1,8 @@
 use rand;
 use rand::{Rng};
 
+use std::collections::HashSet;
+
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub enum Color {
     Red, Yellow, Green, Blue, White
@@ -75,5 +77,39 @@ impl Deck {
 
     pub fn pop(&mut self) -> Option<Card> {
         self.cards.pop()
+    }
+}
+
+#[derive(RustcEncodable)]
+pub struct CardKnowledge {
+    pub knows_color:      bool,
+    pub knows_number:     bool,
+    pub knows_color_not:  HashSet<Color>,
+    pub knows_number_not: HashSet<Number>,
+}
+
+impl CardKnowledge {
+    pub fn new() -> Self {
+        CardKnowledge {
+            knows_color:      false,
+            knows_number:     false,
+            knows_color_not:  HashSet::new(),
+            knows_number_not: HashSet::new(),
+        }
+    }
+}
+
+#[derive(RustcEncodable)]
+pub struct CardInHand {
+    pub card:      Card,
+    pub knowledge: CardKnowledge,
+}
+
+impl CardInHand {
+    pub fn new(card: Card) -> Self {
+        CardInHand {
+            card:      card,
+            knowledge: CardKnowledge::new(),
+        }
     }
 }

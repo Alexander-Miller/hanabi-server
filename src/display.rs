@@ -1,7 +1,7 @@
 use std::fmt::{Display, Formatter, Result};
-use cards::{Card, Color, Number, Deck};
+use cards::{Card, Color, Number, Deck, CardKnowledge};
 use responses::ResponseType;
-use game_state::{CardKnowledge, Player};
+use game_state::Player;
 
 impl Display for Color {
     fn fmt(&self, f: &mut Formatter) -> Result {

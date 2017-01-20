@@ -1,49 +1,15 @@
-use std::collections::HashSet;
+use cards::{Deck, Card, Color, Number, CardInHand};
+use responses::error_messages::*;
+
 use std::collections::HashMap;
 use std::mem;
 use std::default::Default;
-use cards::{Color, Number, Card, Deck};
-use requests::{HintNumberRequest, HintColorRequest, PlayCardRequest, DiscardCardRequest};
-use responses::error_messages::*;
 
 pub type Void = ();
 
-const DEFAULT_HINT_TOKENS: u8 = 8;
-const DEFAULT_ERR_TOKENS:  u8 = 3;
-
-#[derive(RustcEncodable)]
-pub struct CardKnowledge {
-    pub knows_color:      bool,
-    pub knows_number:     bool,
-    pub knows_color_not:  HashSet<Color>,
-    pub knows_number_not: HashSet<Number>,
-}
-
-impl CardKnowledge {
-    pub fn new() -> Self {
-        CardKnowledge {
-            knows_color:      false,
-            knows_number:     false,
-            knows_color_not:  HashSet::new(),
-            knows_number_not: HashSet::new(),
-        }
-    }
-}
-
-#[derive(RustcEncodable)]
-pub struct CardInHand {
-    pub card:      Card,
-    pub knowledge: CardKnowledge,
-}
-
-impl CardInHand {
-    pub fn new(card: Card) -> Self {
-        CardInHand {
-            card:      card,
-            knowledge: CardKnowledge::new(),
-        }
-    }
-}
+const CARDS_IN_DECK:       usize = 50;
+const DEFAULT_HINT_TOKENS: usize = 8;
+const DEFAULT_ERR_TOKENS:  usize = 3;
 
 #[derive(RustcEncodable)]
 pub struct Player {
