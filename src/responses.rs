@@ -51,18 +51,14 @@ impl<'s> ConnectionResponse<'s> {
 #[derive(RustcEncodable)]
 pub struct DiscardCardResponse<'s> {
     msg_type:    ResponseType,
-    next_player: &'s str,
     game_state:  &'s GameState,
-    turns_left:  Option<usize>,
 }
 
 impl<'s> DiscardCardResponse<'s> {
-    pub fn new(next_player: &'s str, game_state: &'s GameState, turns_left: Option<usize>) -> Self {
+    pub fn new(game_state: &'s GameState) -> Self {
         DiscardCardResponse {
             msg_type:    DiscardCardResponseType,
-            next_player: next_player,
             game_state:  game_state,
-            turns_left:  turns_left,
         }
     }
 }
@@ -70,18 +66,14 @@ impl<'s> DiscardCardResponse<'s> {
 #[derive(RustcEncodable)]
 pub struct PlayCardResponse<'s> {
     msg_type:    ResponseType,
-    next_player: &'s str,
     game_state:  &'s GameState,
-    turns_left:  Option<usize>,
 }
 
 impl<'s> PlayCardResponse<'s> {
-    pub fn new(next_player: &'s str, game_state: &'s GameState, turns_left: Option<usize>) -> Self {
+    pub fn new(game_state: &'s GameState, ) -> Self {
         PlayCardResponse {
             msg_type:    PlayCardResponseType,
-            next_player: next_player,
             game_state:  game_state,
-            turns_left:  turns_left,
         }
     }
 }
@@ -89,18 +81,14 @@ impl<'s> PlayCardResponse<'s> {
 #[derive(RustcEncodable)]
 pub struct HintColorResponse<'s> {
     msg_type:    ResponseType,
-    next_player: &'s str,
     game_state:  &'s GameState,
-    turns_left:  Option<usize>,
 }
 
 impl<'s> HintColorResponse<'s> {
-    pub fn new(next_player: &'s str, game_state: &'s GameState, turns_left: Option<usize>) -> Self {
+    pub fn new(game_state: &'s GameState) -> Self {
         HintColorResponse {
             msg_type:    HintColorResposeType,
-            next_player: next_player,
             game_state:  game_state,
-            turns_left:  turns_left,
         }
     }
 }
@@ -108,18 +96,14 @@ impl<'s> HintColorResponse<'s> {
 #[derive(RustcEncodable)]
 pub struct HintNumberResponse<'s> {
     msg_type:    ResponseType,
-    next_player: &'s str,
     game_state:  &'s GameState,
-    turns_left:  Option<usize>,
 }
 
 impl<'s> HintNumberResponse<'s> {
-    pub fn new(next_player: &'s str, game_state: &'s GameState, turns_left: Option<usize>) -> Self {
+    pub fn new(game_state: &'s GameState) -> Self {
         HintNumberResponse {
             msg_type:    HintNumberResposeType,
-            next_player: next_player,
             game_state:  game_state,
-            turns_left:  turns_left,
         }
     }
 }
@@ -142,15 +126,13 @@ impl GameOverResponse {
 #[derive(RustcEncodable)]
 pub struct GameStartResponse<'s> {
     msg_type: ResponseType,
-    next_player: &'s str,
     game_state:  &'s GameState,
 }
 
 impl<'s> GameStartResponse<'s> {
-    pub fn new(next_player: &'s str, game_state: &'s GameState) -> Self {
+    pub fn new(game_state: &'s GameState) -> Self {
         GameStartResponse {
             msg_type:    GameStartResponseType,
-            next_player: next_player,
             game_state:  game_state,
         }
     }
@@ -168,4 +150,5 @@ pub mod error_messages {
     pub const NO_CARDS:                      &'static str = "The deck has nor more cards.";
     pub const NO_HINT_TOKENS:                &'static str = "Hint token count is zero, a hint cannot be played.";
     pub const CARD_NOT_FOUND:                &'static str = "The given Card cannot be found on the Player's hand.";
+    pub const PLAYER_NOT_FOUND:              &'static str = "The given Player could not be found.";
 }

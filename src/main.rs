@@ -1,9 +1,9 @@
-extern crate rand;
-extern crate ws;
-extern crate rustc_serialize;
 #[macro_use]
 extern crate log;
 extern crate env_logger;
+extern crate rand;
+extern crate ws;
+extern crate rustc_serialize;
 
 mod connection;
 mod server;

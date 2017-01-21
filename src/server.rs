@@ -30,10 +30,7 @@ use responses::{
 
 pub struct Server {
     game_state:   GameState,
-    finish_count: usize,
-    next_count:   usize,
     player_map:   BTreeMap<u8, String>,
-    next_player:  String,
     connections:  Vec<Sender>,
     game_started: bool,
 }
@@ -43,10 +40,7 @@ impl Server {
         debug!("Creating new server instance.");
         Server {
             game_state:   game_state,
-            finish_count: 0,
-            next_count:   0,
             player_map:   BTreeMap::new(),
-            next_player:  String::with_capacity(20),
             connections:  Vec::with_capacity(6),
             game_started: false,
         }
@@ -140,7 +134,6 @@ impl Server {
                 info!("Connection success.");
                 self.player_map.insert(con.id, String::from(req.name.clone()));
                 self.connections.push(con.out.clone());
-                self.finish_count += 1;
                 let response = &self.encode_response(&ConnectionResponse::new(self.player_map.values().map(|n| n.as_str()).collect::<Vec<&str>>()));
                 self.answer_with_resp_msg(response, &con)
             }
@@ -153,11 +146,10 @@ impl Server {
 
     fn handle_discard_request(&mut self, discard_req: &DiscardCardRequest, con: &Connection) -> Result<Void> {
         info!("Handle Discard Request for card \"{}\" from Connection {}.", discard_req.discarded_card, con.id);
-        match self.game_state.discard_card(self.player_map.get(&con.id).unwrap(), &discard_req) {
+        match self.game_state.discard_card(self.player_map.get(&con.id).unwrap(), discard_req.discarded_card.id) {
             Ok(_) => {
                 info!("Card successfully discarded.");
-                self.set_next_player();
-                let response = &self.encode_response(&DiscardCardResponse::new(&self.next_player, &self.game_state, self.turns_left()));
+                let response = &self.encode_response(&DiscardCardResponse::new(&self.game_state));
                 self.answer_with_resp_msg(response, &con)
             }
             Err(err_msg) => {
@@ -169,10 +161,9 @@ impl Server {
 
     fn handle_hint_color_request(&mut self, hint_color_req: &HintColorRequest, con: &Connection) -> Result<Void> {
         info!("Handle Hint Color Request for color \"{}\" from Connection {}.", hint_color_req.color, con.id);
-        match self.game_state.hint_color(self.player_map.get(&con.id).unwrap(), &hint_color_req) {
+        match self.game_state.hint_color(self.player_map.get(&con.id).unwrap(), &hint_color_req.color) {
             Ok(_) => {
-                self.set_next_player();
-                let response = &self.encode_response(&HintColorResponse::new(&self.next_player, &self.game_state, self.turns_left()));
+                let response = &self.encode_response(&HintColorResponse::new(&self.game_state));
                 self.answer_with_resp_msg(response, &con)
             }
             Err(err_msg) => self.answer_with_error_msg(err_msg, None, &con),
@@ -181,10 +172,9 @@ impl Server {
 
     fn handle_hint_number_request(&mut self, hint_number_req: &HintNumberRequest, con: &Connection) -> Result<Void> {
         info!("Handle Hint Number Request for color \"{}\" from Connection {}.", hint_number_req.number, con.id);
-        match self.game_state.hint_number(self.player_map.get(&con.id).unwrap(), &hint_number_req) {
+        match self.game_state.hint_number(self.player_map.get(&con.id).unwrap(), &hint_number_req.number) {
             Ok(_) => {
-                self.set_next_player();
-                let response = &self.encode_response(&HintNumberResponse::new(&self.next_player, &self.game_state, self.turns_left()));
+                let response = &self.encode_response(&HintNumberResponse::new(&self.game_state));
                 self.answer_with_resp_msg(response, &con)
             }
             Err(err_msg) => self.answer_with_error_msg(err_msg, None, &con),
@@ -193,17 +183,15 @@ impl Server {
 
     fn handle_play_card_request(&mut self, play_card_req: &PlayCardRequest, con: &Connection) -> Result<Void> {
         info!("Handle Play Card Request for card \"{}\" from Connection {}.", play_card_req.played_card, con.id);
-        match self.game_state.play_card(self.player_map.get(&con.id).unwrap(), &play_card_req) {
+        match self.game_state.play_card(self.player_map.get(&con.id).unwrap(), play_card_req.played_card.id) {
             CardPlayingResult::Success => {
                 info!("Attempt to play Card {} was successful.", play_card_req.played_card);
-                self.set_next_player();
-                let response = &self.encode_response(&PlayCardResponse::new(&self.next_player, &self.game_state, self.turns_left()));
+                let response = &self.encode_response(&PlayCardResponse::new(&self.game_state));
                 self.answer_with_resp_msg(response, &con)
             }
             CardPlayingResult::Failure => {
                 info!("Attempt to play {} has failed.", play_card_req.played_card);
-                self.set_next_player();
-                let response = &self.encode_response(&PlayCardResponse::new(&self.next_player, &self.game_state, self.turns_left()));
+                let response = &self.encode_response(&PlayCardResponse::new(&self.game_state));
                 self.answer_with_resp_msg(response, &con)
             }
             CardPlayingResult::EpicFail => {
@@ -219,19 +207,14 @@ impl Server {
     fn handle_game_start_request(&mut self, _: &GameStartRequest, con: &Connection) -> Result<Void> {
         info!("Starting game.");
         self.game_started = true;
-        self.set_next_player();
-        let response = &self.encode_response(&GameStartResponse::new(&self.next_player, &self.game_state));
+        let response = &self.encode_response(&GameStartResponse::new(&self.game_state));
         self.answer_with_resp_msg(response, &con)
     }
 
     fn answer_with_resp_msg(&mut self, resp: &str, con: &Connection) -> Result<Void> {
         debug!("Dispatching reponse for connection {}.", con.id);
-        if self.game_state.deck_is_empty() {
-            self.finish_count -= 1;
-            debug!("Deck is empty. {} turns left till game over.", self.finish_count);
-            if self.finish_count == 0 {
-                return self.game_over(&con);
-            }
+        if self.game_state.turns_left() == 0 {
+            return self.game_over(&con);
         }
         con.out.broadcast(resp)
     }
@@ -245,18 +228,6 @@ impl Server {
             out.close(CloseCode::Normal).unwrap();
         }
         Ok(())
-    }
-
-    fn set_next_player(&mut self) {
-        self.next_count  = (self.next_count + 1) % self.player_map.keys().len();
-        self.next_player = self.player_map.values().nth(self.next_count).unwrap().clone();
-    }
-
-    fn turns_left(&self) -> Option<usize> {
-        match self.game_state.deck_is_empty() {
-            true  => Some(self.finish_count),
-            false => None,
-        }
     }
 
 }

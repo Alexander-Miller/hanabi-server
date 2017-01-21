@@ -38,13 +38,13 @@ impl Number {
 
 #[derive(RustcDecodable, RustcEncodable, PartialEq, Clone)]
 pub struct Card {
-    pub id:     u8,
+    pub id:     usize,
     pub color:  Color,
     pub number: Number,
 }
 
 impl Card {
-    pub fn new(id: u8, color: Color, number: Number) -> Self {
+    pub fn new(id: usize, color: Color, number: Number) -> Self {
         Card {
             id:     id,
             color:  color,
