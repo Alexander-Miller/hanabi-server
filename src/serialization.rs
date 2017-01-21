@@ -107,7 +107,7 @@ impl Decodable for RequestType {
     fn decode<D: Decoder>(d: &mut D) -> Result<RequestType, D::Error> {
         d.read_enum("RequestType", |d|  {
             let names = &["CONNECTION_REQUEST",
-                          "DISCARD_REQUEST",
+                          "DISCARD_CARD_REQUEST",
                           "HINT_COLOR_REQUEST",
                           "HINT_NUMBER_REQUEST",
                           "PLAY_CARD_REQUEST",
