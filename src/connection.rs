@@ -52,7 +52,7 @@ impl Connection {
     }
 
     fn dispatch_req_to_server(&self, req: &str) -> Result<Void> {
-       debug!("Dispath Request to server.");
-       self.server.borrow_mut().handle_req(&req, &self)
+        debug!("Dispath Request to server.");
+        self.server.borrow_mut().handle_req(&req, &self)
     }
 }
