@@ -81,10 +81,12 @@ impl GameState {
             .drain(0..5)
             .map(|c| CardInHand::new(c))
             .collect();
+
         self.players.push(Player::new(name.into(), cards));
+        self.next_player = name.into();
 
         debug!("Added new player: {}", self.players[self.players.len()-1]);
-        debug!("Number of players increased to {:?}", self.turns_left - CARDS_IN_DECK);
+        debug!("Number of players increased to {:?}", self.players.len());
 
         Ok(())
     }
