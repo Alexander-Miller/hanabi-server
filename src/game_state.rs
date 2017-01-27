@@ -109,7 +109,7 @@ impl GameState {
         self.maybe_draw_new_card(p_index, c_index);
 
         if self.hint_tokens < self.hint_tokens_max {
-            self.hint_tokens_max += 1;
+            self.hint_tokens += 1;
         }
 
         Ok(())
