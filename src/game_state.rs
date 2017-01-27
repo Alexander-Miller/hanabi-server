@@ -106,7 +106,8 @@ impl GameState {
     }
 
     fn do_discard_card(&mut self, p_index: usize, c_index: usize) -> Result<Void, &'static str> {
-        self.maybe_draw_new_card(p_index, c_index);
+        let discarded_card = self.maybe_draw_new_card(p_index, c_index);
+        self.discarded_cards.push(discarded_card);
 
         if self.hint_tokens < self.hint_tokens_max {
             self.hint_tokens += 1;
@@ -130,30 +131,32 @@ impl GameState {
     }
 
     fn do_play_card(&mut self, p_index: usize, c_index: usize) -> CardPlayingResult {
-        self.maybe_draw_new_card(p_index, c_index);
 
-        let played_card = &self.discarded_cards[self.discarded_cards.len() - 1];
+        let played_card = self.maybe_draw_new_card(p_index, c_index);
 
         if Number::is_next_largest(self.played_cards.get(&played_card.color), &played_card.number) {
-            self.played_cards.insert(played_card.color.clone(), played_card.number.clone());
-            debug!("Play card success. Currently played cards: {:?}",
+            debug!("Play card success. Currently played cards:\n {:?}",
                    self.played_cards.iter().map(|(color, number)| format!("{}: {}\n", color, number)).collect::<Vec<_>>());
+
             if played_card.number == Number::Five && self.hint_tokens < self.hint_tokens_max {
                 self.hint_tokens += 1;
                 debug!("Played a Five - number of hint tokens increased to {}.", self.hint_tokens);
             }
-            return CardPlayingResult::Success;
+
+            self.played_cards.insert(played_card.color, played_card.number);
+
+            CardPlayingResult::Success
         } else {
             self.err_tokens -= 1;
             debug!("Play card fail. {} err tokens left.", self.err_tokens);
             match self.err_tokens {
-                0 => return CardPlayingResult::EpicFail,
-                _ => return CardPlayingResult::Failure,
+                0 => CardPlayingResult::EpicFail,
+                _ => CardPlayingResult::Failure,
             }
         }
     }
 
-    fn maybe_draw_new_card(&mut self, p_index: usize, c_index: usize) {
+    fn maybe_draw_new_card(&mut self, p_index: usize, c_index: usize) -> Card {
         self.set_next_player();
         self.turns_left -= 1;
         let mut hand = &mut self.players[p_index].cards;
@@ -162,11 +165,11 @@ impl GameState {
                 debug!("Card removed and {} drawn as replacement", new_card);
                 let mut new_card_in_hand = CardInHand::new(new_card);
                 mem::swap(&mut new_card_in_hand, &mut hand[c_index]);
-                self.discarded_cards.push(new_card_in_hand.card);
+                new_card_in_hand.card
             }
             None => {
                 debug!("Deck is empty and removed card will not be replaced.");
-                self.discarded_cards.push(hand.remove(c_index).card);
+                hand.remove(c_index).card
             }
         }
     }
