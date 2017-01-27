@@ -94,7 +94,7 @@ impl Server {
             Err(_) => return self.answer_with_error_msg(UNABLE_TO_GET_MSG_TYPE, None, &con)
         };
 
-        info!("Received Request of type {:?} from Connnection {}.", req_type, con.id);
+        info!("Received Request of type {:?} from Connection {}.", req_type, con.id);
         let already_connected = self.is_connected(con.id);
         let is_connecting     = req_type == ConnectionRequestType;
 
