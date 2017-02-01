@@ -160,10 +160,13 @@ impl GameState {
             debug!("Play card fail. {} err tokens left.", self.err_tokens);
             match self.err_tokens {
                 0 => CardPlayingResult::EpicFail,
-                _ => CardPlayingResult::Ok {
-                    success:     false,
-                    played_card: played_card,
-                    drawn_card:  drawn_card,
+                _ => {
+                    self.discarded_cards.push(played_card);
+                    CardPlayingResult::Ok {
+                        success:     false,
+                        played_card: played_card,
+                        drawn_card:  drawn_card,
+                    }
                 }
             }
         }
