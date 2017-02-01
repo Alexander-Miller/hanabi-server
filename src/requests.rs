@@ -1,4 +1,4 @@
-use cards::{Color, Number, Card};
+use cards::{Color, Number};
 
 #[derive(Debug, PartialEq)]
 pub enum RequestType {
@@ -18,8 +18,8 @@ pub struct ConnectionRequest {
 
 #[derive(RustcDecodable)]
 pub struct DiscardCardRequest {
-    pub msg_type:       RequestType,
-    pub discarded_card: Card
+    pub msg_type:          RequestType,
+    pub discarded_card_id: usize,
 }
 
 #[derive(RustcDecodable)]
@@ -38,8 +38,8 @@ pub struct HintNumberRequest {
 
 #[derive(RustcDecodable)]
 pub struct PlayCardRequest {
-    pub msg_type:    RequestType,
-    pub played_card: Card
+    pub msg_type:       RequestType,
+    pub played_card_id: usize,
 }
 
 #[derive(RustcDecodable)]

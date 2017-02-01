@@ -145,23 +145,23 @@ impl Server {
     }
 
     fn handle_discard_request(&mut self, discard_req: &DiscardCardRequest, con: &Connection) -> Result<Void> {
-        info!("Handle Discard Request for card \"{}\" from Connection {}.", discard_req.discarded_card, con.id);
+        info!("Handle Discard Request for card  #{} from Connection {}.", discard_req.discarded_card_id, con.id);
         let player = self.player_map.get(&con.id).unwrap();
-        match self.game_state.discard_card(player, discard_req.discarded_card.id) {
+        match self.game_state.discard_card(player, discard_req.discarded_card_id) {
             DiscardCardResult::Ok{discarded_card: discarded, drawn_card: drawn} => {
-                info!("Card successfully discarded.");
+                info!("Card #{} successfully discarded.", discard_req.discarded_card_id);
                 let response = &self.encode_response(&DiscardCardResponse::new(player, &discarded, drawn.as_ref(), &self.game_state));
                 self.answer_with_resp_msg(response, &con)
             }
             DiscardCardResult::Err(err_msg) => {
-                info!("Card could not be discarded: {}.", err_msg);
+                info!("Card #{} could not be discarded: {}.", discard_req.discarded_card_id, err_msg);
                 self.answer_with_error_msg(err_msg, None, &con)
             }
         }
     }
 
     fn handle_hint_color_request(&mut self, hint_color_req: &HintColorRequest, con: &Connection) -> Result<Void> {
-        info!("Handle Hint Color Request for color \"{}\" from Connection {}.", hint_color_req.color, con.id);
+        info!("Handle Hint Color Request for color {} from Connection {}.", hint_color_req.color, con.id);
         match self.game_state.hint_color(&hint_color_req.target_player, &hint_color_req.color) {
             Ok(_) => {
                 let response = &self.encode_response(&HintColorResponse::new(&self.game_state));
@@ -172,7 +172,7 @@ impl Server {
     }
 
     fn handle_hint_number_request(&mut self, hint_number_req: &HintNumberRequest, con: &Connection) -> Result<Void> {
-        info!("Handle Hint Number Request for color \"{}\" from Connection {}.", hint_number_req.number, con.id);
+        info!("Handle Hint Number Request for color {} from Connection {}.", hint_number_req.number, con.id);
         match self.game_state.hint_number(&hint_number_req.target_player, &hint_number_req.number) {
             Ok(_) => {
                 let response = &self.encode_response(&HintNumberResponse::new(&self.game_state));
@@ -183,28 +183,28 @@ impl Server {
     }
 
     fn handle_play_card_request(&mut self, play_card_req: &PlayCardRequest, con: &Connection) -> Result<Void> {
-        info!("Handle Play Card Request for card \"{}\" from Connection {}.", play_card_req.played_card, con.id);
+        info!("Handle Play Card Request for card #{} from Connection {}.", play_card_req.played_card_id, con.id);
         let player = self.player_map.get(&con.id).unwrap();
-        match self.game_state.play_card(player, play_card_req.played_card.id) {
+        match self.game_state.play_card(player, play_card_req.played_card_id) {
             CardPlayingResult::Ok {
                 success,
                 played_card,
                 drawn_card,
             } => {
                 match success {
-                    true  => info!("Attempt of player {} to play card with id {} was successful.", player, play_card_req.played_card.id),
-                    false => info!("Attempt of player {} to play card with id {} has failed.", player, play_card_req.played_card.id),
+                    true  => info!("Attempt of player {} to play card #{} was successful.", player, play_card_req.played_card_id),
+                    false => info!("Attempt of player {} to play card #{} has failed.", player, play_card_req.played_card_id),
                 }
                 let response = &self.encode_response(
                     &PlayCardResponse::new(&player, &played_card, drawn_card.as_ref(), success, &self.game_state));
                 self.answer_with_resp_msg(response, &con)
             }
             CardPlayingResult::EpicFail => {
-                info!("Attempt to play Card {} has failed and all error tokens are used up.", play_card_req.played_card);
+                info!("Attempt to play Card #{} has failed and all error tokens are used up.", play_card_req.played_card_id);
                 self.game_over(&con)
             }
             CardPlayingResult::Err(err_msg) => {
-                error!("Error when player {} tried to play card with id {}", player, play_card_req.played_card.id);
+                error!("Error when player {} tried to play card #{}", player, play_card_req.played_card_id);
                 self.answer_with_error_msg(err_msg, None, &con)
             }
         }
