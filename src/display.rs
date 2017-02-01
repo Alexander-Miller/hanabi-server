@@ -50,9 +50,9 @@ impl Display for Card {
 
 impl Display for Player {
     fn fmt(&self, f: &mut Formatter) -> Result {
-        write!(f, "Player {}:", self.name).unwrap();
+        write!(f, "Player {}:\n", self.name).unwrap();
         for cih in &self.cards {
-            write!(f, "Card {} with Knowledge {}", cih.card, cih.knowledge).unwrap();
+            write!(f, "Card {} with Knowledge {}\n", cih.card, cih.knowledge).unwrap();
         }
         Ok(())
     }
@@ -60,7 +60,7 @@ impl Display for Player {
 
 impl Display for CardKnowledge {
     fn fmt(&self, f: &mut Formatter) -> Result {
-        write!(f, "Know Color: {}, Know Number: {}, Excluded Colors: {:?}, Excluded Numbers: {:?}",
+        write!(f, "Knows Color: {}, Knows Number: {}, Excluded Colors: {:?}, Excluded Numbers: {:?}",
                self.knows_color,
                self.knows_number,
                self.knows_color_not.iter().map(|c| format!("{}", c)).collect::<Vec<_>>(),

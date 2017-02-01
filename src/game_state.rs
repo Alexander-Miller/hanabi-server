@@ -64,7 +64,7 @@ impl GameState {
     }
 
     pub fn add_player(&mut self, name: &str) -> Result<Void, &'static str> {
-        info!("Adding new player \"{}\".", name);
+        info!("Adding new player {}.", name);
         if self.deck.cards.len() < 5 {
             error!("Not enough cards for new player.");
             return Err(NO_CARDS);
@@ -86,19 +86,19 @@ impl GameState {
         self.next_player = name.into();
 
         debug!("Added new player: {}", self.players[self.players.len()-1]);
-        debug!("Number of players increased to {:?}", self.players.len());
+        debug!("Number of players increased to {}", self.players.len());
 
         Ok(())
     }
 
     pub fn discard_card(&mut self, name: &str, discarded_card_id: usize) -> DiscardCardResult {
-        info!("Discarding card with id {} of player {}.", discarded_card_id, name);
+        info!("Discarding card #{} of player {}.", discarded_card_id, name);
 
         if let Some(p_index) = self.player_index(name) {
             if let Some(c_index) = self.card_index(p_index, discarded_card_id) {
                 return self.do_discard_card(p_index, c_index)
             } else {
-                error!("Could not find card with id {} on the hand of player {}", discarded_card_id, name);
+                error!("Could not find card #{} on the hand of player {}", discarded_card_id, name);
                 return DiscardCardResult::Err(CARD_NOT_FOUND)
             }
         } else {
@@ -112,6 +112,7 @@ impl GameState {
         self.discarded_cards.push(discarded_card);
 
         if self.hint_tokens < self.hint_tokens_max {
+            debug!("Card discarded - number of hint tokens increased to {}", self.hint_tokens);
             self.hint_tokens += 1;
         }
 
@@ -122,15 +123,17 @@ impl GameState {
     }
 
     pub fn play_card(&mut self, name: &str, played_card_id: usize) -> CardPlayingResult {
-        debug!("Playing card with id {} of player {}", played_card_id, name);
+        debug!("Playing card #{} of player {}", played_card_id, name);
 
         if let Some(p_index) = self.player_index(name) {
             if let Some(c_index) = self.card_index(p_index, played_card_id) {
                 return self.do_play_card(p_index, c_index)
             } else {
+                error!("Could not find card #{} on the hand of player {}", played_card_id, name);
                 return CardPlayingResult::Err(CARD_NOT_FOUND)
             }
         } else {
+            error!("Could not find player {}", name);
             return CardPlayingResult::Err(PLAYER_NOT_FOUND)
         }
     }
@@ -191,7 +194,7 @@ impl GameState {
     }
 
     pub fn hint_color(&mut self, name: &str, color: &Color) -> Result<Void, &'static str> {
-        debug!("Hinting color {} for player {}.", color, name);
+        info!("Hinting color {} for player {}.", color, name);
         self.knowledge_update(name,
                               &|c| { c.card.color == *color },
                               &|c| { c.knowledge.knows_color = true; c.knowledge.knows_color_not.clear(); },
@@ -199,7 +202,7 @@ impl GameState {
     }
 
     pub fn hint_number(&mut self, name: &str, number: &Number) -> Result<Void, &'static str> {
-        debug!("Hinting number {} for player {}.", number, name);
+        info!("Hinting number {} for player {}.", number, name);
         self.knowledge_update(name,
                               &|c| { c.card.number == *number },
                               &|c| { c.knowledge.knows_number = true; c.knowledge.knows_number_not.clear(); },
@@ -214,7 +217,7 @@ impl GameState {
                         -> Result<Void, &'static str>
     {
         debug!("Update knowledge for player {}.", name);
-        if let Some(p_index) = self.players.iter_mut().position(|p| p.name == name) {
+        if let Some(p_index) = self.player_index(&name) {
             try!(self.use_hint());
             self.set_next_player();
 
@@ -230,6 +233,7 @@ impl GameState {
             }
             return Ok(())
         } else {
+            error!("Could not find player {}", name);
             return Err(PLAYER_NOT_FOUND)
         }
     }

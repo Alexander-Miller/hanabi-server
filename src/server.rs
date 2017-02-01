@@ -128,7 +128,7 @@ impl Server {
     }
 
     fn handle_connection_request(&mut self, req: &ConnectionRequest, con: &Connection) -> Result<Void> {
-        info!("Handle Connection Request for player \"{}\" from Connection {}.", req.name, con.id);
+        info!("Handle Connection Request for player {} from Connection {}.", req.name, con.id);
         match self.game_state.add_player(req.name.as_str()) {
             Ok(_) => {
                 info!("Connection success.");
@@ -138,7 +138,7 @@ impl Server {
                 self.answer_with_resp_msg(response, &con)
             }
             Err(err_msg) => {
-                info!("Connection failure: {}.", err_msg);
+                error!("Connection failure: {}.", err_msg);
                 self.answer_with_error_msg(err_msg, None, &con)
             }
         }
@@ -154,20 +154,24 @@ impl Server {
                 self.answer_with_resp_msg(response, &con)
             }
             DiscardCardResult::Err(err_msg) => {
-                info!("Card #{} could not be discarded: {}.", discard_req.discarded_card_id, err_msg);
+                error!("Card #{} could not be discarded: {}.", discard_req.discarded_card_id, err_msg);
                 self.answer_with_error_msg(err_msg, None, &con)
             }
         }
     }
 
     fn handle_hint_color_request(&mut self, hint_color_req: &HintColorRequest, con: &Connection) -> Result<Void> {
-        info!("Handle Hint Color Request for color {} from Connection {}.", hint_color_req.color, con.id);
+        info!("Handle Hint Color Request for color {} from Connection {} for player {}.", hint_color_req.color, con.id, hint_color_req.target_player);
         match self.game_state.hint_color(&hint_color_req.target_player, &hint_color_req.color) {
             Ok(_) => {
+                info!("Color hint for player {} successful", hint_color_req.target_player);
                 let response = &self.encode_response(&HintColorResponse::new(&self.game_state));
                 self.answer_with_resp_msg(response, &con)
             }
-            Err(err_msg) => self.answer_with_error_msg(err_msg, None, &con),
+            Err(err_msg) => {
+                error!("Color hint could not be given to player {}: {}", hint_color_req.target_player, err_msg);
+                self.answer_with_error_msg(err_msg, None, &con)
+            }
         }
     }
 
@@ -175,10 +179,14 @@ impl Server {
         info!("Handle Hint Number Request for color {} from Connection {}.", hint_number_req.number, con.id);
         match self.game_state.hint_number(&hint_number_req.target_player, &hint_number_req.number) {
             Ok(_) => {
+                info!("Number hint for player {} successful", hint_number_req.target_player);
                 let response = &self.encode_response(&HintNumberResponse::new(&self.game_state));
                 self.answer_with_resp_msg(response, &con)
             }
-            Err(err_msg) => self.answer_with_error_msg(err_msg, None, &con),
+            Err(err_msg) => {
+                error!("Number hint could not be given to player {}: {}", hint_number_req.target_player, err_msg);
+                self.answer_with_error_msg(err_msg, None, &con)
+            }
         }
     }
 
