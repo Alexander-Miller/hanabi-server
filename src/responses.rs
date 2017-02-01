@@ -1,4 +1,5 @@
 use game_state::GameState;
+use cards::Card;
 use self::ResponseType::*;
 
 #[derive(Debug)]
@@ -50,30 +51,53 @@ impl<'s> ConnectionResponse<'s> {
 
 #[derive(RustcEncodable)]
 pub struct DiscardCardResponse<'s> {
-    msg_type:    ResponseType,
-    game_state:  &'s GameState,
+    msg_type:          ResponseType,
+    discarding_player: &'s str,
+    discarded_card:    &'s Card,
+    drawn_card:        Option<&'s Card>,
+    game_state:        &'s GameState,
 }
 
 impl<'s> DiscardCardResponse<'s> {
-    pub fn new(game_state: &'s GameState) -> Self {
+    pub fn new(discarding_player: &'s str,
+               discarded_card: &'s Card,
+               drawn_card: Option<&'s Card>,
+               game_state: &'s GameState)
+               -> Self {
         DiscardCardResponse {
-            msg_type:    DiscardCardResponseType,
-            game_state:  game_state,
+            msg_type:          DiscardCardResponseType,
+            discarding_player: discarding_player,
+            discarded_card:    discarded_card,
+            drawn_card:        drawn_card,
+            game_state:        game_state,
         }
     }
 }
 
 #[derive(RustcEncodable)]
 pub struct PlayCardResponse<'s> {
-    msg_type:    ResponseType,
-    game_state:  &'s GameState,
+    msg_type:       ResponseType,
+    playing_player: &'s str,
+    played_card:    &'s Card,
+    drawn_card:     Option<&'s Card>,
+    success:        bool,
+    game_state:     &'s GameState,
 }
 
 impl<'s> PlayCardResponse<'s> {
-    pub fn new(game_state: &'s GameState, ) -> Self {
+    pub fn new(playing_player: &'s str,
+               played_card: &'s Card,
+               drawn_card: Option<&'s Card>,
+               success: bool,
+               game_state: &'s GameState)
+               -> Self {
         PlayCardResponse {
-            msg_type:    PlayCardResponseType,
-            game_state:  game_state,
+            msg_type:       PlayCardResponseType,
+            playing_player: playing_player,
+            played_card:    played_card,
+            drawn_card:     drawn_card,
+            success:        success,
+            game_state:     game_state,
         }
     }
 }

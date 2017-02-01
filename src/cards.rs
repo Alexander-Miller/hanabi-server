@@ -3,12 +3,12 @@ use rand::{Rng};
 
 use std::collections::HashSet;
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash, Copy)]
 pub enum Color {
     Red, Yellow, Green, Blue, White
 }
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash, Copy)]
 pub enum Number {
     One, Two, Three, Four, Five
 }
@@ -36,7 +36,7 @@ impl Number {
     }
 }
 
-#[derive(RustcDecodable, RustcEncodable, PartialEq, Clone)]
+#[derive(RustcDecodable, RustcEncodable, PartialEq, Clone, Copy)]
 pub struct Card {
     pub id:     usize,
     pub color:  Color,
@@ -66,7 +66,7 @@ impl Deck {
         for color in &[Color::Blue, Color::Green, Color::Red, Color::White, Color::Yellow] {
             for &(amount, ref number) in number_arity {
                 for _ in 0..amount {
-                    cards.push(Card::new(id, color.clone(), number.clone()));
+                    cards.push(Card::new(id, *color, *number));
                     id += 1;
                 }
             }

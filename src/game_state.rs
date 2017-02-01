@@ -91,7 +91,7 @@ impl GameState {
         Ok(())
     }
 
-    pub fn discard_card(&mut self, name: &str, discarded_card_id: usize) -> Result<Void, &'static str> {
+    pub fn discard_card(&mut self, name: &str, discarded_card_id: usize) -> DiscardCardResult {
         info!("Discarding card with id {} of player {}.", discarded_card_id, name);
 
         if let Some(p_index) = self.player_index(name) {
@@ -99,23 +99,26 @@ impl GameState {
                 return self.do_discard_card(p_index, c_index)
             } else {
                 error!("Could not find card with id {} on the hand of player {}", discarded_card_id, name);
-                return Err(CARD_NOT_FOUND)
+                return DiscardCardResult::Err(CARD_NOT_FOUND)
             }
         } else {
             error!("Could not find player {}", name);
-            return Err(PLAYER_NOT_FOUND)
+            return DiscardCardResult::Err(PLAYER_NOT_FOUND)
         }
     }
 
-    fn do_discard_card(&mut self, p_index: usize, c_index: usize) -> Result<Void, &'static str> {
-        let discarded_card = self.maybe_draw_new_card(p_index, c_index);
+    fn do_discard_card(&mut self, p_index: usize, c_index: usize) -> DiscardCardResult {
+        let (discarded_card, drawn_card) = self.maybe_draw_new_card(p_index, c_index);
         self.discarded_cards.push(discarded_card);
 
         if self.hint_tokens < self.hint_tokens_max {
             self.hint_tokens += 1;
         }
 
-        Ok(())
+        DiscardCardResult::Ok {
+            discarded_card: discarded_card,
+            drawn_card:     drawn_card
+        }
     }
 
     pub fn play_card(&mut self, name: &str, played_card_id: usize) -> CardPlayingResult {
@@ -134,7 +137,7 @@ impl GameState {
 
     fn do_play_card(&mut self, p_index: usize, c_index: usize) -> CardPlayingResult {
 
-        let played_card = self.maybe_draw_new_card(p_index, c_index);
+        let (played_card, drawn_card) = self.maybe_draw_new_card(p_index, c_index);
 
         if Number::is_next_largest(self.played_cards.get(&played_card.color), &played_card.number) {
             debug!("Play card success. Currently played cards:\n {:?}",
@@ -147,18 +150,26 @@ impl GameState {
 
             self.played_cards.insert(played_card.color, played_card.number);
 
-            CardPlayingResult::Success
+            CardPlayingResult::Ok {
+                success:     true,
+                played_card: played_card,
+                drawn_card:  drawn_card,
+            }
         } else {
             self.err_tokens -= 1;
             debug!("Play card fail. {} err tokens left.", self.err_tokens);
             match self.err_tokens {
                 0 => CardPlayingResult::EpicFail,
-                _ => CardPlayingResult::Failure,
+                _ => CardPlayingResult::Ok {
+                    success:     false,
+                    played_card: played_card,
+                    drawn_card:  drawn_card,
+                }
             }
         }
     }
 
-    fn maybe_draw_new_card(&mut self, p_index: usize, c_index: usize) -> Card {
+    fn maybe_draw_new_card(&mut self, p_index: usize, c_index: usize) -> (Card, Option<Card>) {
         self.set_next_player();
         self.turns_left -= 1;
         let mut hand = &mut self.players[p_index].cards;
@@ -167,11 +178,11 @@ impl GameState {
                 debug!("Card removed and {} drawn as replacement", new_card);
                 let mut new_card_in_hand = CardInHand::new(new_card);
                 mem::swap(&mut new_card_in_hand, &mut hand[c_index]);
-                new_card_in_hand.card
+                (new_card_in_hand.card, Some(hand[c_index].card))
             }
             None => {
                 debug!("Deck is empty and removed card will not be replaced.");
-                hand.remove(c_index).card
+                (hand.remove(c_index).card, None)
             }
         }
     }
@@ -264,8 +275,19 @@ impl GameState {
 }
 
 pub enum CardPlayingResult {
-    Success,
-    Failure,
+    Ok {
+        success:     bool,
+        played_card: Card,
+        drawn_card:  Option<Card>,
+    },
     EpicFail,
+    Err(&'static str),
+}
+
+pub enum DiscardCardResult {
+    Ok {
+        discarded_card: Card,
+        drawn_card:     Option<Card>
+    },
     Err(&'static str),
 }

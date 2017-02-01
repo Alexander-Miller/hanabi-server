@@ -4,7 +4,7 @@ use ws::{CloseCode, Result, Sender};
 use std::error::Error;
 use std::collections::BTreeMap;
 use std::result::Result as StdResult;
-use game_state::{CardPlayingResult, GameState, Void};
+use game_state::{CardPlayingResult, GameState, Void, DiscardCardResult};
 use connection::Connection;
 use requests::RequestType::*;
 use requests::{
@@ -146,13 +146,14 @@ impl Server {
 
     fn handle_discard_request(&mut self, discard_req: &DiscardCardRequest, con: &Connection) -> Result<Void> {
         info!("Handle Discard Request for card \"{}\" from Connection {}.", discard_req.discarded_card, con.id);
-        match self.game_state.discard_card(self.player_map.get(&con.id).unwrap(), discard_req.discarded_card.id) {
-            Ok(_) => {
+        let player = self.player_map.get(&con.id).unwrap();
+        match self.game_state.discard_card(player, discard_req.discarded_card.id) {
+            DiscardCardResult::Ok{discarded_card: discarded, drawn_card: drawn} => {
                 info!("Card successfully discarded.");
-                let response = &self.encode_response(&DiscardCardResponse::new(&self.game_state));
+                let response = &self.encode_response(&DiscardCardResponse::new(player, &discarded, drawn.as_ref(), &self.game_state));
                 self.answer_with_resp_msg(response, &con)
             }
-            Err(err_msg) => {
+            DiscardCardResult::Err(err_msg) => {
                 info!("Card could not be discarded: {}.", err_msg);
                 self.answer_with_error_msg(err_msg, None, &con)
             }
@@ -183,15 +184,19 @@ impl Server {
 
     fn handle_play_card_request(&mut self, play_card_req: &PlayCardRequest, con: &Connection) -> Result<Void> {
         info!("Handle Play Card Request for card \"{}\" from Connection {}.", play_card_req.played_card, con.id);
-        match self.game_state.play_card(self.player_map.get(&con.id).unwrap(), play_card_req.played_card.id) {
-            CardPlayingResult::Success => {
-                info!("Attempt to play Card {} was successful.", play_card_req.played_card);
-                let response = &self.encode_response(&PlayCardResponse::new(&self.game_state));
-                self.answer_with_resp_msg(response, &con)
-            }
-            CardPlayingResult::Failure => {
-                info!("Attempt to play {} has failed.", play_card_req.played_card);
-                let response = &self.encode_response(&PlayCardResponse::new(&self.game_state));
+        let player = self.player_map.get(&con.id).unwrap();
+        match self.game_state.play_card(player, play_card_req.played_card.id) {
+            CardPlayingResult::Ok {
+                success,
+                played_card,
+                drawn_card,
+            } => {
+                match success {
+                    true  => info!("Attempt of player {} to play card with id {} was successful.", player, play_card_req.played_card.id),
+                    false => info!("Attempt of player {} to play card with id {} has failed.", player, play_card_req.played_card.id),
+                }
+                let response = &self.encode_response(
+                    &PlayCardResponse::new(&player, &played_card, drawn_card.as_ref(), success, &self.game_state));
                 self.answer_with_resp_msg(response, &con)
             }
             CardPlayingResult::EpicFail => {
@@ -199,6 +204,7 @@ impl Server {
                 self.game_over(&con)
             }
             CardPlayingResult::Err(err_msg) => {
+                error!("Error when player {} tried to play card with id {}", player, play_card_req.played_card.id);
                 self.answer_with_error_msg(err_msg, None, &con)
             }
         }
@@ -211,7 +217,7 @@ impl Server {
         self.answer_with_resp_msg(response, &con)
     }
 
-    fn answer_with_resp_msg(&mut self, resp: &str, con: &Connection) -> Result<Void> {
+    fn answer_with_resp_msg(&self, resp: &str, con: &Connection) -> Result<Void> {
         debug!("Dispatching reponse for connection {}.", con.id);
         if self.game_state.turns_left() == 0 {
             return self.game_over(&con);
@@ -219,7 +225,7 @@ impl Server {
         con.out.broadcast(resp)
     }
 
-    fn game_over(&mut self, con: &Connection) -> Result<Void> {
+    fn game_over(&self, con: &Connection) -> Result<Void> {
         let score = self.game_state.score();
         info!("Game Over! Final score: {}.", score);
         let response = &self.encode_response(&GameOverResponse::new(score));
