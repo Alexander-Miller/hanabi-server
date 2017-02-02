@@ -53,31 +53,20 @@ impl Card {
     }
 }
 
-#[derive(RustcEncodable)]
-pub struct Deck {
-    pub cards: Vec<Card>
-}
-
-impl Deck {
-    pub fn new() -> Self {
-        let mut cards: Vec<Card> = Vec::with_capacity(50);
-        let mut id = 1;
-        let number_arity = &[(3, Number::One), (2, Number::Two), (2, Number::Three), (2, Number::Four), (1, Number::Five)];
-        for color in &[Color::Blue, Color::Green, Color::Red, Color::White, Color::Yellow] {
-            for &(amount, ref number) in number_arity {
-                for _ in 0..amount {
-                    cards.push(Card::new(id, *color, *number));
-                    id += 1;
-                }
+pub fn new_deck() -> Vec<Card> {
+    let mut cards: Vec<Card> = Vec::with_capacity(50);
+    let mut id = 1;
+    let number_arity = &[(3, Number::One), (2, Number::Two), (2, Number::Three), (2, Number::Four), (1, Number::Five)];
+    for color in &[Color::Blue, Color::Green, Color::Red, Color::White, Color::Yellow] {
+        for &(amount, ref number) in number_arity {
+            for _ in 0..amount {
+                cards.push(Card::new(id, *color, *number));
+                id += 1;
             }
         }
-        rand::thread_rng().shuffle(&mut cards);
-        Deck { cards: cards }
     }
-
-    pub fn pop(&mut self) -> Option<Card> {
-        self.cards.pop()
-    }
+    rand::thread_rng().shuffle(&mut cards);
+    cards
 }
 
 #[derive(RustcEncodable)]

@@ -1,4 +1,5 @@
-use cards::{Deck, Card, Color, Number, CardInHand};
+use cards;
+use cards::{Card, Color, Number, CardInHand};
 use responses::error_messages::*;
 
 use std::collections::HashMap;
@@ -33,7 +34,7 @@ pub struct GameState {
     err_tokens:      usize,
     played_cards:    HashMap<Color, Number>,
     players:         Vec<Player>,
-    deck:            Deck,
+    deck:            Vec<Card>,
     discarded_cards: Vec<Card>,
     next_player:     String,
     turns_left:      usize,
@@ -56,7 +57,7 @@ impl GameState {
             err_tokens:      err_tokens,
             played_cards:    HashMap::new(),
             players:         Vec::with_capacity(6),
-            deck:            Deck::new(),
+            deck:            cards::new_deck(),
             discarded_cards: Vec::with_capacity(CARDS_IN_DECK),
             next_player:     String::new(),
             turns_left:      CARDS_IN_DECK,
@@ -65,7 +66,7 @@ impl GameState {
 
     pub fn add_player(&mut self, name: &str) -> Result<Void, &'static str> {
         info!("Adding new player {}.", name);
-        if self.deck.cards.len() < 5 {
+        if self.deck.len() < 5 {
             error!("Not enough cards for new player.");
             return Err(NO_CARDS);
         }
@@ -77,7 +78,7 @@ impl GameState {
 
         self.turns_left += 1;
 
-        let cards = self.deck.cards
+        let cards = self.deck
             .drain(0..5)
             .map(|c| CardInHand::new(c))
             .collect();
@@ -221,7 +222,7 @@ impl GameState {
             try!(self.use_hint());
             self.set_next_player();
 
-            if self.deck.cards.is_empty() {
+            if self.deck.is_empty() {
                 self.turns_left -= 1;
             }
 

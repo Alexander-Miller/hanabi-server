@@ -1,5 +1,5 @@
 use std::fmt::{Display, Formatter, Result};
-use cards::{Card, Color, Number, Deck, CardKnowledge};
+use cards::{Card, Color, Number, CardKnowledge};
 use responses::ResponseType;
 use game_state::Player;
 
@@ -65,21 +65,5 @@ impl Display for CardKnowledge {
                self.knows_number,
                self.knows_color_not.iter().map(|c| format!("{}", c)).collect::<Vec<_>>(),
                self.knows_number_not.iter().map(|n| format!("{}", n)).collect::<Vec<_>>())
-    }
-}
-
-impl Display for Deck {
-    fn fmt(&self, f: &mut Formatter) -> Result {
-        let mut i = 1;
-        if self.cards.is_empty() {
-            write!(f, "Empty Deck")
-        } else {
-            try!(write!(f, "Deck:\n"));
-            for ref card in &self.cards {
-                try!(write!(f, "{}: {}\n", i, card));
-                i += 1;
-            }
-            Ok(())
-        }
     }
 }
