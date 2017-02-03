@@ -236,8 +236,8 @@ impl Server {
     fn game_over(&self, con: &Connection) -> Result<Void> {
         let score = self.game_state.score();
         info!("Game Over! Final score: {}.", score);
-        let response = &self.encode_response(&GameOverResponse::new(score));
-        self.answer_with_resp_msg(response, &con).unwrap();
+        let response = self.encode_response(&GameOverResponse::new(score));
+        con.out.broadcast(response.as_str()).unwrap();
         for out in &self.connections {
             out.close(CloseCode::Normal).unwrap();
         }
