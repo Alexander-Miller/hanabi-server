@@ -165,12 +165,12 @@ impl GameState {
                 drawn_card:  drawn_card,
             }
         } else {
-            self.err_tokens -= 1;
-            debug!("Play card fail. {} err tokens left.", self.err_tokens);
             match self.err_tokens {
                 0 => CardPlayingResult::EpicFail,
                 _ => {
                     self.discarded_cards.push(played_card);
+                    self.err_tokens -= 1;
+                    debug!("Play card fail. {} err tokens left.", self.err_tokens);
                     CardPlayingResult::Ok {
                         success:     false,
                         played_card: played_card,
@@ -267,7 +267,7 @@ impl GameState {
             self.turns_left = match self.turns_left {
                 None => {
                     debug!("Deck is empty, leaving every player with 1 more turn to go.");
-                    Some(self.players.len())
+                    Some(self.players.len()-1)
                 }
                 Some(t) if t > 0 => {
                     debug!("Deck is empty and {} more turns are left.", t-1);
