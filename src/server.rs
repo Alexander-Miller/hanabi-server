@@ -162,10 +162,12 @@ impl Server {
 
     fn handle_hint_color_request(&mut self, hint_color_req: &HintColorRequest, con: &Connection) -> Result<Void> {
         info!("Handle Hint Color Request for color {} from Connection {} for player {}.", hint_color_req.color, con.id, hint_color_req.target_player);
+        let player = self.player_map.get(&con.id).unwrap();
         match self.game_state.hint_color(&hint_color_req.target_player, &hint_color_req.color) {
             Ok(_) => {
                 info!("Color hint for player {} successful", hint_color_req.target_player);
-                let response = &self.encode_response(&HintColorResponse::new(&self.game_state));
+                let response = &self.encode_response(&HintColorResponse::new(
+                    player, &hint_color_req.target_player, &hint_color_req.color, &self.game_state));
                 self.answer_with_resp_msg(response, &con)
             }
             Err(err_msg) => {
@@ -177,10 +179,12 @@ impl Server {
 
     fn handle_hint_number_request(&mut self, hint_number_req: &HintNumberRequest, con: &Connection) -> Result<Void> {
         info!("Handle Hint Number Request for color {} from Connection {}.", hint_number_req.number, con.id);
+        let player = self.player_map.get(&con.id).unwrap();
         match self.game_state.hint_number(&hint_number_req.target_player, &hint_number_req.number) {
             Ok(_) => {
                 info!("Number hint for player {} successful", hint_number_req.target_player);
-                let response = &self.encode_response(&HintNumberResponse::new(&self.game_state));
+                let response = &self.encode_response(&HintNumberResponse::new(
+                    player, &hint_number_req.target_player, &hint_number_req.number, &self.game_state));
                 self.answer_with_resp_msg(response, &con)
             }
             Err(err_msg) => {

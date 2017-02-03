@@ -1,5 +1,5 @@
 use game_state::GameState;
-use cards::Card;
+use cards::{Color, Number, Card};
 use self::ResponseType::*;
 
 #[derive(Debug)]
@@ -104,30 +104,50 @@ impl<'s> PlayCardResponse<'s> {
 
 #[derive(RustcEncodable)]
 pub struct HintColorResponse<'s> {
-    msg_type:    ResponseType,
-    game_state:  &'s GameState,
+    msg_type:       ResponseType,
+    hinting_player: &'s str,
+    target_player:  &'s str,
+    hinted_color:   &'s Color,
+    game_state:     &'s GameState,
 }
 
 impl<'s> HintColorResponse<'s> {
-    pub fn new(game_state: &'s GameState) -> Self {
+    pub fn new(hinting_player: &'s str,
+               target_player: &'s str,
+               hinted_color: &'s Color,
+               game_state: &'s GameState)
+               -> Self {
         HintColorResponse {
-            msg_type:    HintColorResposeType,
-            game_state:  game_state,
+            msg_type:       HintColorResposeType,
+            hinting_player: hinting_player,
+            target_player:  target_player,
+            hinted_color:   hinted_color,
+            game_state:     game_state,
         }
     }
 }
 
 #[derive(RustcEncodable)]
 pub struct HintNumberResponse<'s> {
-    msg_type:    ResponseType,
-    game_state:  &'s GameState,
+    msg_type:       ResponseType,
+    hinting_player: &'s str,
+    target_player:  &'s str,
+    hinted_number:  &'s Number,
+    game_state:     &'s GameState,
 }
 
 impl<'s> HintNumberResponse<'s> {
-    pub fn new(game_state: &'s GameState) -> Self {
+    pub fn new(hinting_player: &'s str,
+               target_player: &'s str,
+               hinted_number: &'s Number,
+               game_state: &'s GameState)
+               -> Self {
         HintNumberResponse {
-            msg_type:    HintNumberResposeType,
-            game_state:  game_state,
+            msg_type:       HintNumberResposeType,
+            hinting_player: hinting_player,
+            target_player:  target_player,
+            hinted_number:  hinted_number,
+            game_state:     game_state,
         }
     }
 }
