@@ -50,9 +50,9 @@ impl Display for Card {
 
 impl Display for Player {
     fn fmt(&self, f: &mut Formatter) -> Result {
-        write!(f, "Player {}:\n", self.name).unwrap();
+        write!(f, "Player {}:", self.name).unwrap();
         for cih in &self.cards {
-            write!(f, "Card {} with Knowledge {}\n", cih.card, cih.knowledge).unwrap();
+            write!(f, "\nCard {} with Knowledge {}", cih.card, cih.knowledge).unwrap();
         }
         Ok(())
     }
