@@ -8,9 +8,10 @@ use std::default::Default;
 
 pub type Void = ();
 
-const CARDS_IN_DECK:       usize = 50;
-const DEFAULT_HINT_TOKENS: usize = 8;
-const DEFAULT_ERR_TOKENS:  usize = 3;
+const CARDS_IN_DECK:        usize = 50;
+const DEFAULT_HINT_TOKENS:  usize = 8;
+const DEFAULT_ERR_TOKENS:   usize = 3;
+const FOUR_CARDS_THRESHOLD: usize = 4;
 
 #[derive(RustcEncodable)]
 pub struct Player {
@@ -76,8 +77,26 @@ impl GameState {
             return Err(PLAYER_ALREADY_EXISTS);
         }
 
+        let no_of_players = self.players.len() + 1;
+        let cards_per_player = match no_of_players >= FOUR_CARDS_THRESHOLD {
+            false => {
+                debug!("Number of players below threshold. New player will receive 5 cards.");
+                5
+            }
+            true  => {
+                if no_of_players == FOUR_CARDS_THRESHOLD {
+                    debug!("Threshold fpr number of players crossed. Removing cards from all previously added players.");
+                    for player in &mut self.players {
+                        self.deck.push(player.cards.pop().unwrap().card);
+                    }
+                }
+                debug!("Number of players above threshold. New player will receive 4 cards.");
+                4
+            }
+        };
+
         let cards = self.deck
-            .drain(0..5)
+            .drain(0..cards_per_player)
             .map(|c| CardInHand::new(c))
             .collect();
 
