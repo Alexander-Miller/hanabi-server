@@ -227,7 +227,7 @@ impl Server {
 
     fn answer_with_resp_msg(&self, resp: &str, con: &Connection) -> Result<Void> {
         debug!("Dispatching reponse for connection {}.", con.id);
-        if self.game_state.turns_left() == 0 {
+        if let Some(0) = self.game_state.turns_left() {
             return self.game_over(&con);
         }
         con.out.broadcast(resp)

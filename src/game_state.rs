@@ -37,7 +37,7 @@ pub struct GameState {
     deck:            Vec<Card>,
     discarded_cards: Vec<Card>,
     next_player:     String,
-    turns_left:      usize,
+    turns_left:      Option<usize>,
 }
 
 impl Default for GameState {
@@ -60,7 +60,7 @@ impl GameState {
             deck:            cards::new_deck(),
             discarded_cards: Vec::with_capacity(CARDS_IN_DECK),
             next_player:     String::new(),
-            turns_left:      CARDS_IN_DECK,
+            turns_left:      None,
         }
     }
 
@@ -75,8 +75,6 @@ impl GameState {
             error!("Player already exists.");
             return Err(PLAYER_ALREADY_EXISTS);
         }
-
-        self.turns_left += 1;
 
         let cards = self.deck
             .drain(0..5)
@@ -109,6 +107,10 @@ impl GameState {
     }
 
     fn do_discard_card(&mut self, p_index: usize, c_index: usize) -> DiscardCardResult {
+        match self.maybe_turn_has_passed() {
+            Err(msg) => return DiscardCardResult::Err(msg),
+            _ => {}
+        };
         let (discarded_card, drawn_card) = self.maybe_draw_new_card(p_index, c_index);
         self.discarded_cards.push(discarded_card);
 
@@ -140,7 +142,10 @@ impl GameState {
     }
 
     fn do_play_card(&mut self, p_index: usize, c_index: usize) -> CardPlayingResult {
-
+        match self.maybe_turn_has_passed() {
+            Err(msg) => return CardPlayingResult::Err(msg),
+            _ => {}
+        };
         let (played_card, drawn_card) = self.maybe_draw_new_card(p_index, c_index);
 
         if Number::is_next_largest(self.played_cards.get(&played_card.color), &played_card.number) {
@@ -178,7 +183,6 @@ impl GameState {
 
     fn maybe_draw_new_card(&mut self, p_index: usize, c_index: usize) -> (Card, Option<Card>) {
         self.set_next_player();
-        self.turns_left -= 1;
         let mut hand = &mut self.players[p_index].cards;
         match self.deck.pop() {
             Some(new_card) => {
@@ -218,13 +222,10 @@ impl GameState {
                         -> Result<Void, &'static str>
     {
         debug!("Update knowledge for player {}.", name);
+        try!(self.maybe_turn_has_passed());
         if let Some(p_index) = self.player_index(&name) {
             try!(self.use_hint());
             self.set_next_player();
-
-            if self.deck.is_empty() {
-                self.turns_left -= 1;
-            }
 
             for mut card_in_hand in &mut self.players[p_index].cards {
                 match predicate(&card_in_hand) {
@@ -261,6 +262,26 @@ impl GameState {
         }
     }
 
+    fn maybe_turn_has_passed(&mut self) -> Result<Void, &'static str> {
+        if self.deck.is_empty() {
+            self.turns_left = match self.turns_left {
+                None => {
+                    debug!("Deck is empty, leaving every player with 1 more turn to go.");
+                    Some(self.players.len())
+                }
+                Some(t) if t > 0 => {
+                    debug!("Deck is empty and {} more turns are left.", t-1);
+                    Some(t-1)
+                }
+                Some(_) => {
+                    error!("Tried to execute an action when the game was already over with 0 turns left.");
+                    return Err(GAME_IS_OVER)
+                }
+            }
+        };
+        Ok(())
+    }
+
     fn player_index(&self, name: &str) -> Option<usize> {
         self.players.iter().position(|p| p.name == name)
     }
@@ -269,7 +290,7 @@ impl GameState {
         self.players[p_index].cards.iter().position(|c| c.card.id == id)
     }
 
-    pub fn turns_left(&self) -> usize {
+    pub fn turns_left(&self) -> Option<usize> {
         self.turns_left
     }
 
