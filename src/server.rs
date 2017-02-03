@@ -145,7 +145,7 @@ impl Server {
     }
 
     fn handle_discard_request(&mut self, discard_req: &DiscardCardRequest, con: &Connection) -> Result<Void> {
-        info!("Handle Discard Request for card  #{} from Connection {}.", discard_req.discarded_card_id, con.id);
+        info!("Handle Discard Request for card #{} from Connection {}.", discard_req.discarded_card_id, con.id);
         let player = self.player_map.get(&con.id).unwrap();
         match self.game_state.discard_card(player, discard_req.discarded_card_id) {
             DiscardCardResult::Ok{discarded_card: discarded, drawn_card: drawn} => {
