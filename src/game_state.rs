@@ -85,7 +85,7 @@ impl GameState {
             }
             true  => {
                 if no_of_players == FOUR_CARDS_THRESHOLD {
-                    debug!("Threshold fpr number of players crossed. Removing cards from all previously added players.");
+                    debug!("Threshold for number of players crossed. Removing cards from all previously added players.");
                     for player in &mut self.players {
                         self.deck.push(player.cards.pop().unwrap().card);
                     }
