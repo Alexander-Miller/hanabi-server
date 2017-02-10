@@ -101,7 +101,7 @@ impl Server {
         if already_connected && is_connecting {
             self.answer_with_error_msg(ALREADY_CONNECTED, None, &con)
         } else if self.game_started && is_connecting {
-            self.answer_with_error_msg(GAME_ALREADY_STARTED, None, &con)
+            self.answer_with_error_msg(CONN_GAME_ALREADY_STARTED, None, &con)
         } else if !already_connected && !is_connecting {
             self.answer_with_error_msg(NOT_YET_CONNECTED, None, &con)
         } else {
@@ -223,10 +223,15 @@ impl Server {
     }
 
     fn handle_game_start_request(&mut self, _: &GameStartRequest, con: &Connection) -> Result<Void> {
-        info!("Starting game.");
-        self.game_started = true;
-        let response = &self.encode_response(&GameStartResponse::new(&self.game_state));
-        self.answer_with_resp_msg(response, &con)
+        if self.game_started {
+            error!("Received request to start game after it was started already.");
+            self.answer_with_error_msg(GAME_ALREADY_STARTED, None, &con)
+        } else {
+            info!("Starting game.");
+            self.game_started = true;
+            let response = &self.encode_response(&GameStartResponse::new(&self.game_state));
+            self.answer_with_resp_msg(response, &con)
+        }
     }
 
     fn answer_with_resp_msg(&self, resp: &str, con: &Connection) -> Result<Void> {
