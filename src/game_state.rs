@@ -259,6 +259,10 @@ impl GameState {
         }
     }
 
+    pub fn get_next_player(&self) -> &str {
+        self.next_player.as_str()
+    }
+
     fn set_next_player(&mut self) {
         match self.next_player.as_str() {
             "" => self.next_player = self.players[0].name.clone(),

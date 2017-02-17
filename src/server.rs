@@ -89,6 +89,11 @@ impl Server {
             }
         }
 
+        if self.player_map.get(&con.id).unwrap() != self.game_state.get_next_player() && !self.game_state.get_next_player().is_empty() {
+            return self.answer_with_error_msg(NOT_YOUR_TURN, None, &con)
+        }
+
+
         let req_type = match get_req_type(&req) {
             Ok(t)  => t,
             Err(_) => return self.answer_with_error_msg(UNABLE_TO_GET_MSG_TYPE, None, &con)
@@ -123,7 +128,6 @@ impl Server {
         match json::decode::<T>(&req_str) {
             Ok(req) => dispatch_recv(self, &req, &con),
             Err(e)  => self.answer_with_error_msg(UNABLE_TO_DESERIALIZE_PAYLOAD, Some(e.description()), &con)
-
         }
     }
 

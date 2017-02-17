@@ -197,4 +197,5 @@ pub mod error_messages {
     pub const CARD_NOT_FOUND:                &'static str = "The given Card cannot be found on the Player's hand.";
     pub const PLAYER_NOT_FOUND:              &'static str = "The given Player could not be found.";
     pub const GAME_IS_OVER:                  &'static str = "Tried to make a turn pass when no turns are left.";
+    pub const NOT_YOUR_TURN:                 &'static str = "Tried to send a request when it was someone else's turn.";
 }
