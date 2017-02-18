@@ -89,10 +89,11 @@ impl Server {
             }
         }
 
-        if self.player_map.get(&con.id).unwrap() != self.game_state.get_next_player() && !self.game_state.get_next_player().is_empty() {
-            return self.answer_with_error_msg(NOT_YOUR_TURN, None, &con)
+        if let Some(name) = self.player_map.get(&con.id) {
+            if name != self.game_state.get_next_player() && !self.game_state.get_next_player().is_empty() {
+                return self.answer_with_error_msg(NOT_YOUR_TURN, None, &con)
+            }
         }
-
 
         let req_type = match get_req_type(&req) {
             Ok(t)  => t,
