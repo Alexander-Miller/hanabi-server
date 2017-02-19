@@ -67,10 +67,6 @@ impl GameState {
 
     pub fn add_player(&mut self, name: &str) -> Result<Void, &'static str> {
         info!("Adding new player {}.", name);
-        if self.deck.len() < 5 {
-            error!("Not enough cards for new player.");
-            return Err(NO_CARDS);
-        }
 
         if self.players.iter().any(|p| p.name == name) {
             error!("Player already exists.");
@@ -94,6 +90,12 @@ impl GameState {
                 4
             }
         };
+
+        if self.deck.len() < cards_per_player {
+            error!("Not enough cards for new player.");
+            return Err(NO_CARDS);
+        }
+
 
         let cards = self.deck
             .drain(0..cards_per_player)
