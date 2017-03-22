@@ -1,0 +1,102 @@
+* Hanabi server protocol specification
+This document specifically deals with using and communicating with the hanabi server.
+To learn about the rules of hanabi /the game/ try its [[https://en.wikipedia.org/wiki/Hanabi_(card_game)][wikipedia]] article.
+
+** Basics
+Once started the server will begin listening to incoming websocket connections. Once a connection
+is established the client is free to send requests to the server. Each request will always be answered
+with an appropriate response. In fact any request sent from /one/ client will result in the same response
+being sent to /all/ client to ensure all player are kept up-to-date on current game events.
+
+Should a request go unanswered something probably went wrong with the server.
+
+The server goes to a great effort to first validate client input and to run various sanity checks before
+committing to any persistent game state changes. Should any client action result in the server sending an error
+response (the one exception to the rule of responses being sent to all players) it should still be possible to
+continue playing the game, provided the client side issue can be resolved. Error responses will always contain a
+clear explanation detailing what went wrong.
+
+*** About types
+
+All communcation takes place via json. To simplify serialization in statically typed languages (the server is written
+in rust, the [[https://github.com/BalazsAtWork/HanabiFX][reference client]] in java) each request and response contains a field ~msg_type~ indicatong
+the exact type of the message (easily mappable to an Enum). The possible values will be detailed in the following
+sections.
+
+** Starting the game
+*** Connection
+To request to participate in a game the client must first send a ~ConnectionRequest~.
+Other than its type it contains exactly one field - the player's name:
+
+#+BEGIN_SRC js
+  ConnectionRequest {
+      msg_type: "CONNECTION_REQUEST"
+      name: String
+  }
+#+END_SRC
+
+If the player is already connected or if the game has already started the server will answer
+with an error response.
+
+In case of success the server will return a ~ConnectionResponse~ containing a list of the names
+of /all/ currently connected players:
+
+#+BEGIN_SRC js
+  ConnectionResponse {
+      msg_type: "CONNECTION_RESPONSE"
+      names: List<String>
+  }
+#+END_SRC
+
+*** Game start
+ To get a game going /one/ of the connected players must send a ~GameStartRequest~ which is otherwise
+ blank:
+
+#+BEGIN_SRC js
+  GameStartRequest {
+      msg_type: "GAME_START_REQUEST"
+  }
+#+END_SRC
+
+The server will answer with a ~GameStartResponse~ containing the initial game state (explained in the next section):
+
+#+BEGIN_SRC js
+  GameStartResponse {
+      msg_type: "GAME_START_RESPONSE"
+      game_state: GameState
+  }
+#+END_SRC
+
+** The game state
+The most basic building block is the ~Card~ which consists of a ~Number~ and a ~Color~ and a unique id
+used to tell the difference between two cards of the same color and number but with the player knowing
+different things about them:
+
+#+BEGIN_SRC js
+  Color = "RED" | "GREEN" | "BLUE" | "WHITE" "YELLOW"
+
+  Number = "ONE" | "TWO" | "THREE" | "FOUR" | "FIVE"
+
+  Card {
+      color: Color
+      number: Number
+  }
+#+END_SRC
+
+ The next part is the ~CardKnowledge~, a player's current insight into a card's structure:
+
+ #+BEGIN_SRC js
+   CardKnowledge {
+       knows_color: boolean,
+       knows_number: boolean,
+       knows_color_not: Set<Color>,
+       knows_number_not: Set<Number>,
+   }
+ #+END_SRC
+
+** Playing the game
+todo
+** Game over
+todo
+** Error handling
+todo
