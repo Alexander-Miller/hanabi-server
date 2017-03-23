@@ -30,8 +30,8 @@ Other than its type it contains exactly one field - the player's name:
 
 #+BEGIN_SRC js
   ConnectionRequest {
-      msg_type: "CONNECTION_REQUEST"
-      name: String
+      msg_type: "CONNECTION_REQUEST",
+      name:     String
   }
 #+END_SRC
 
@@ -43,8 +43,8 @@ of /all/ currently connected players:
 
 #+BEGIN_SRC js
   ConnectionResponse {
-      msg_type: "CONNECTION_RESPONSE"
-      names: List<String>
+      msg_type: "CONNECTION_RESPONSE",
+      names:    List<String>
   }
 #+END_SRC
 
@@ -62,7 +62,7 @@ The server will answer with a ~GameStartResponse~ containing the initial game st
 
 #+BEGIN_SRC js
   GameStartResponse {
-      msg_type: "GAME_START_RESPONSE"
+      msg_type:   "GAME_START_RESPONSE",
       game_state: GameState
   }
 #+END_SRC
@@ -78,21 +78,66 @@ different things about them:
   Number = "ONE" | "TWO" | "THREE" | "FOUR" | "FIVE"
 
   Card {
-      color: Color
+      color:  Color,
       number: Number
   }
 #+END_SRC
 
- The next part is the ~CardKnowledge~, a player's current insight into a card's structure:
+The next part is the ~CardKnowledge~, a player's current insight into a card's structure:
 
- #+BEGIN_SRC js
+#+BEGIN_SRC js
    CardKnowledge {
-       knows_color: boolean,
-       knows_number: boolean,
-       knows_color_not: Set<Color>,
-       knows_number_not: Set<Number>,
+       knows_color:      boolean,
+       knows_number:     boolean,
+       knows_color_not:  Set<Color>,
+       knows_number_not: Set<Number>
    }
  #+END_SRC
+
+Both combine into a ~CardInHand~, a card currently held in a player's hand:
+
+#+BEGIN_SRC js
+  CardInHand {
+      card:      Card,
+      knowledge: CardKnowledge
+  }
+#+END_SRC
+
+Which leads us to the player which consists of a name and the currently held cards:
+
+#+BEGIN_SRC js
+  Player {
+      name:  String,
+      cards: List<CardInHand>
+  }
+#+END_SRC
+
+These building blocks are all that is needed to construct the entire game state. Since
+all game logic is handled on the server the game state carries /all/ information
+that's needed to play and process the game, nameley:
+
+ * the amount of current (and maximum possible) error and hint tokens
+ * a map detailing the currently played cards for a color
+ * a list of all players
+ * a list of the cards left to be drawn
+ * a list of the cards that have been discarded
+ * the name of the next player to play
+ * the amount of turns left in the game (only included when it is known, that is after
+   the deck has been emptied)
+
+#+BEGIN_SRC js
+  GameState {
+      hint_tokens:     Int,
+      hint_tokens_max: Int,
+      err_tokens:      Int,
+      played_cards:    Map<Color, Number>,
+      players:         List<Player>,
+      deck:            List<Card>,
+      discarded_cards: List<Card>,
+      next_player:     String,
+      turns_left:      Option<Int>
+  }
+#+END_SRC
 
 ** Playing the game
 todo
