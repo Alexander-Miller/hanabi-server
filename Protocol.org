@@ -67,6 +67,9 @@ The server will answer with a ~GameStartResponse~ containing the initial game st
   }
 #+END_SRC
 
+Trying to send anything other than a ~Connection~- or ~GameStartRequest~ before the game has been started or sending
+a ~ConnectionRequest~ afterwards will both result in an error response.
+
 ** The game state
 The most basic building block is the ~Card~ which consists of a ~Number~ and a ~Color~ and a unique id
 used to tell the difference between two cards of the same color and number but with the player knowing
@@ -140,8 +143,115 @@ that's needed to play and process the game, nameley:
 #+END_SRC
 
 ** Playing the game
-todo
+Once the game has begun the players have access to the following actions:
+
+*** Hint Color/Number Request
+
+Give another player a hint about their cards' colors or numbers. These hints may also be "negative",
+meaning it is e.g. possible to hint that all of a player's cards are /not/ of a specific color.
+A hint must contain the name of the targeted player as well as the hinted number/color:
+
+#+BEGIN_SRC js
+  HintColorRequest {
+      msg_type:      "HINT_COLOR_REQUEST",
+      target_player: String,
+      color:         Color
+  }
+
+  HintNumberRequest {
+      msg_type:      "HINT_NUMBER_REQUEST",
+      target_player: String,
+      number:        Number
+  }
+#+END_SRC
+
+The server will answer with a response containing the details of the hint action as well as the resulting
+game state:
+
+#+BEGIN_SRC js
+  HintColorResponse {
+      msg_type:       "HINT_COLOR_RESPONSE",
+      hinting_player: String,
+      target_player:  String,
+      hinted_color:   Color,
+      game_state:     GameState
+  }
+
+  HintNumberResponse {
+      msg_type:       "HINT_NUMBER_RESPONSE",
+      hinting_player: String,
+      target_player:  String,
+      hinted_number:  Number,
+      game_state:     GameState
+  }
+#+END_SRC
+
+*** Discard Card Request
+Discard a card to regain hint tokens. Must contain the unique id of the card to be discarded:
+
+#+BEGIN_SRC js
+  DiscardCardRequest {
+      msg_type:          "DISCARD_CARD_REQUEST",
+      discarded_card_id: Int
+  }
+#+END_SRC
+
+The server will answer with a response containing the details of the discard action, the card that was
+drawn to replace the played card (only if the deck is not yet empty), as well as the resulting game state:
+
+#+BEGIN_SRC js
+  DiscardCardResponse {
+      msg_type:          "DISCARD_CARD_RESPONSE",
+      discarding_player: String,
+      discarded_card:    Card,
+      drawn_card:        Option<Card>,
+      game_state:        GameState
+  }
+#+END_SRC
+
+*** Play Card Request
+Attempt to play a card on the field. Must contain the unique id of the card to be played:
+
+#+BEGIN_SRC js
+  PlayCardRequest {
+      msg_type:       "PLAY_CARD_REQUEST",
+      played_card_id: Int
+  }
+#+END_SRC
+
+The server will answer with a response containing the details of the play action, an indication whether
+the play attempt was successful, the card that was drawn to replace the played card (only if the deck is
+not yet empty), as well as the resulting game state:
+
+#+BEGIN_SRC js
+  PlayCardResponse {
+      msg_type: "PLAY_CARD_RESPONSE",
+      playing_player: String,
+      played_card:    Card,
+      drawn_card:     Option<Card>,
+      success:        Bool,
+      game_state:     GameState
+  }
+#+END_SRC
+
+Playing a Five will regain one hint token id fewer than the maximum are currently in the game.
+
 ** Game over
-todo
+A game is over after any one of 2 conditions is met:
+
+1) All error tokens are used up
+2) The deck is empty and each player had their last turn
+
+Once this happens instead of sending the responses specified in the previous section the server
+will instead immediately send a ~GameOverResponse~ containing the players' score (the sum of the
+highest played numbers for each color) before shutting down all connections:
+
+#+BEGIN_SRC js
+  GameOverResponse {
+      msg_type: "GAME_OVER_RESPONSE",
+      score:    Int,
+  }
+#+END_SRC
+
 ** Error handling
 todo
